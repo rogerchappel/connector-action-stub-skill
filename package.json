@@ -1,1 +1,46 @@
-{"name":"connector-action-stub-skill","version":"0.1.0","description":"Generate dry-run stubs and approval checklists for connector actions.","type":"module","bin":{"connector-action-stub":"./src/cli.js"},"scripts":{"test":"node --test tests/*.test.js","check":"node --check src/index.js && node --check src/cli.js","build":"mkdir -p dist && cp -R src dist/src","smoke":"node src/cli.js plan examples/crm-manifest.json > /tmp/connector-action-stub-skill-smoke.txt"},"keywords":["agent","skill","dry-run","cli"],"license":"MIT"}
+{
+  "name": "connector-action-stub-skill",
+  "version": "0.1.0",
+  "description": "Generate dry-run stubs and approval checklists for connector actions.",
+  "type": "module",
+  "bin": {
+    "connector-action-stub": "./src/cli.js"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "check": "node --check src/index.js && node --check src/cli.js && node --check tests/*.test.js",
+    "build": "mkdir -p dist && cp -R src dist/src",
+    "smoke": "node src/cli.js plan examples/crm-manifest.json > /tmp/connector-action-stub-skill-smoke.txt",
+    "package:smoke": "node scripts/package-smoke.js",
+    "release:check": "npm run check && npm test && npm run build && npm run smoke && npm run package:smoke"
+  },
+  "keywords": [
+    "agent",
+    "skill",
+    "dry-run",
+    "connector",
+    "cli"
+  ],
+  "author": "Roger Chappel",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "src",
+    "dist/src",
+    "docs",
+    "examples",
+    "SKILL.md",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rogerchappel/connector-action-stub-skill.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rogerchappel/connector-action-stub-skill/issues"
+  },
+  "homepage": "https://github.com/rogerchappel/connector-action-stub-skill#readme"
+}
