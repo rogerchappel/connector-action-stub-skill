@@ -8,17 +8,35 @@ Generate dry-run stubs and approval checklists for connector actions.
 npm install
 npm test
 npm run smoke
+npm run release:check
 ```
 
 ## CLI
 
 ```bash
 node src/cli.js plan examples/crm-manifest.json
+node src/cli.js fixture examples/crm-manifest.json
+node src/cli.js skill examples/crm-manifest.json
 ```
 
 ## Agent Skill
 
 See [SKILL.md](./SKILL.md) for when to use this package, side-effect boundaries, approval requirements, examples, and validation.
+
+## Release Verification
+
+Run the full local gate before publishing, tagging, or handing the package to another agent:
+
+```bash
+npm run check
+npm test
+npm run build
+npm run smoke
+npm run package:smoke
+npm run release:check
+```
+
+`npm run package:smoke` performs an `npm pack --dry-run` and verifies that the packed tarball contains the CLI source, library source, sample connector manifest, skill guide, README, license, and package metadata.
 
 ## Safety Notes
 
@@ -27,3 +45,7 @@ The default workflow is local-first. It does not call external services, read cr
 ## Limitations
 
 This MVP provides deterministic planning and linting helpers. Human review remains required before trusting output for release, installation, or live connector execution.
+
+## Support
+
+Report public release-readiness issues at https://github.com/rogerchappel/connector-action-stub-skill/issues.
