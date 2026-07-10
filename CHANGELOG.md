@@ -1,0 +1,6 @@
+# Changelog
+
+## 0.1.0
+
+- Initial release candidate for generating connector dry-run stubs, approval checklists, fixtures, and skill guidance.
+- Includes fixture-backed tests, CLI smoke coverage, and npm package smoke verification.

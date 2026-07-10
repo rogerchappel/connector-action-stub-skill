@@ -15,9 +15,13 @@ const required = [
   'package.json',
   'src/cli.js',
   'src/index.js',
+  'scripts/package-smoke.js',
   'examples/crm-manifest.json',
   'SKILL.md',
   'README.md',
+  'SECURITY.md',
+  'CHANGELOG.md',
+  'CONTRIBUTING.md',
   'LICENSE',
 ];
 
