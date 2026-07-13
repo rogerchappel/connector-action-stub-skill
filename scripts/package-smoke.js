@@ -1,4 +1,5 @@
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 
 const result = spawnSync('npm', ['pack', '--dry-run', '--json'], {
   encoding: 'utf8',
@@ -30,6 +31,25 @@ const missing = required.filter((file) => !files.has(file));
 if (missing.length > 0) {
   console.error(`Package smoke missing expected files: ${missing.join(', ')}`);
   process.exit(1);
+}
+
+const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+if (pkg.exports?.['.'] !== './src/index.js') {
+  console.error('Package smoke failed: package export must expose ./src/index.js');
+  process.exit(1);
+}
+
+const importSmoke = spawnSync(process.execPath, [
+  '--input-type=module',
+  '-e',
+  "import('./src/index.js').then((mod) => { if (typeof mod.buildPlan !== 'function' || typeof mod.renderPlan !== 'function') process.exit(1); })",
+], {
+  encoding: 'utf8',
+});
+if (importSmoke.status !== 0) {
+  process.stderr.write(importSmoke.stderr);
+  console.error('Package smoke failed: src/index.js import did not expose the expected API');
+  process.exit(importSmoke.status ?? 1);
 }
 
 console.log(`Package smoke ok: ${packument.name}-${packument.version}.tgz`);

@@ -23,6 +23,14 @@ node src/cli.js skill examples/crm-manifest.json
 
 See [SKILL.md](./SKILL.md) for when to use this package, side-effect boundaries, approval requirements, examples, and validation.
 
+## Library
+
+```js
+import { buildPlan, renderPlan } from "connector-action-stub-skill";
+```
+
+The package smoke check verifies this export alongside the CLI files.
+
 ## Release Verification
 
 Run the full local gate before publishing, tagging, or handing the package to another agent:
