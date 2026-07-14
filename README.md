@@ -57,7 +57,7 @@ npm run package:smoke
 npm run release:check
 ```
 
-`npm run package:smoke` performs an `npm pack --dry-run` and verifies that the packed tarball contains the CLI source, library source, sample connector manifest, skill guide, README, license, and package metadata.
+`npm run smoke` exercises the documented `plan`, `fixture`, and `skill` CLI modes against the sample connector manifest. `npm run package:smoke` performs an `npm pack --dry-run` and verifies that the packed tarball contains the CLI source, library source, sample connector manifest, skill guide, README, license, and package metadata.
 
 ## Safety Notes
 
