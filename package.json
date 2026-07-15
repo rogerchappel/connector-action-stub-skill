@@ -13,7 +13,7 @@
     "test": "node --test tests/*.test.js",
     "check": "node --check src/index.js && node --check src/cli.js && node --check tests/*.test.js",
     "build": "mkdir -p dist && cp -R src dist/src",
-    "smoke": "node src/cli.js --help && node src/cli.js --version && node src/cli.js plan examples/crm-manifest.json > /tmp/connector-action-stub-skill-smoke.txt",
+    "smoke": "node src/cli.js --help && node src/cli.js --version && node src/cli.js plan examples/crm-manifest.json > /tmp/connector-action-stub-skill-plan.md && node src/cli.js fixture examples/crm-manifest.json > /tmp/connector-action-stub-skill-fixture.json && node src/cli.js skill examples/crm-manifest.json > /tmp/connector-action-stub-skill-guide.md && grep -q \"Connector dry-run plan\" /tmp/connector-action-stub-skill-plan.md && grep -q \"stable-fixture\" /tmp/connector-action-stub-skill-fixture.json && grep -q \"Approval Requirements\" /tmp/connector-action-stub-skill-guide.md",
     "package:smoke": "node scripts/package-smoke.js",
     "release:check": "npm run check && npm test && npm run build && npm run smoke && npm run package:smoke"
   },
