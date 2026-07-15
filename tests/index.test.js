@@ -7,6 +7,12 @@ test('builds dry-run plan for connector manifest', () => { const plan = buildPla
 test('flags missing approval fields', () => { const plan = buildPlan({ actions: [{ name: 'send' }] }); assert.ok(plan.actions[0].missing.includes('approval')); });
 test('generates deterministic fixtures and skill guide', () => { const manifest = parseManifest(fs.readFileSync('examples/crm-manifest.json', 'utf8')); assert.equal(buildFixture(manifest).generatedAt, 'stable-fixture'); assert.match(renderSkillGuide(manifest), /Approval Requirements/); });
 test('cli exposes help and version metadata', () => { const help = spawnSync(process.execPath, ['src/cli.js', '--help'], { encoding: 'utf8' }); assert.equal(help.status, 0); assert.match(help.stdout, /connector-action-stub <plan\|fixture\|skill>/u); const version = spawnSync(process.execPath, ['src/cli.js', '--version'], { encoding: 'utf8' }); assert.equal(version.status, 0); assert.match(version.stdout, /^0\.1\.0\n$/u); });
+test('cli rejects extra positional arguments', () => {
+  const result = spawnSync(process.execPath, ['src/cli.js', 'plan', 'examples/crm-manifest.json', 'ignored.json'], { encoding: 'utf8' });
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /Unexpected argument: ignored\.json/u);
+  assert.match(result.stderr, /connector-action-stub <plan\|fixture\|skill>/u);
+});
 test('cli renders every documented mode from the sample manifest', () => {
   const plan = spawnSync(process.execPath, ['src/cli.js', 'plan', 'examples/crm-manifest.json'], { encoding: 'utf8' });
   assert.equal(plan.status, 0);
