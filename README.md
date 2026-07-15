@@ -32,6 +32,9 @@ node src/cli.js fixture examples/crm-manifest.json
 node src/cli.js skill examples/crm-manifest.json
 ```
 
+Unknown modes and extra positional arguments exit `2`; see
+[CLI behavior](docs/CLI.md) for the release-script contract.
+
 ## Agent Skill
 
 See [SKILL.md](./SKILL.md) for when to use this package, side-effect boundaries, approval requirements, examples, and validation.
