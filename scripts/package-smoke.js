@@ -17,6 +17,7 @@ const required = [
   'src/cli.js',
   'src/index.js',
   'scripts/package-smoke.js',
+  'docs/CLI.md',
   'examples/crm-manifest.json',
   'SKILL.md',
   'README.md',
@@ -50,6 +51,19 @@ if (importSmoke.status !== 0) {
   process.stderr.write(importSmoke.stderr);
   console.error('Package smoke failed: src/index.js import did not expose the expected API');
   process.exit(importSmoke.status ?? 1);
+}
+
+const cliSmoke = spawnSync(process.execPath, [
+  'src/cli.js',
+  'plan',
+  'examples/crm-manifest.json',
+  'ignored.json',
+], {
+  encoding: 'utf8',
+});
+if (cliSmoke.status !== 2 || !cliSmoke.stderr.includes('Unexpected argument: ignored.json')) {
+  console.error('Package smoke failed: CLI must reject extra positional arguments with exit code 2');
+  process.exit(1);
 }
 
 console.log(`Package smoke ok: ${packument.name}-${packument.version}.tgz`);
