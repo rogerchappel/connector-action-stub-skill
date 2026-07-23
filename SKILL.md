@@ -12,6 +12,11 @@ Provide a local JSON connector manifest with an `actions` array. Each action sho
 
 The CLI generates plans and fixtures only. It never calls a live connector, reads credentials, or posts externally.
 
+Set each action's `sideEffect` to `read`, `write`, `send`, or `delete` (matching
+is case-insensitive). Reads are low risk. Writes, sends, and deletes are high
+risk and require an `idempotencyKey`. Any other value fails closed as an
+unready, high-risk action.
+
 ## Approval Requirements
 
 Require explicit human approval before converting a generated dry-run plan into live connector execution.
