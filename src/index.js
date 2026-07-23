@@ -3,13 +3,18 @@ export function parseManifest(text) {
   if (!Array.isArray(manifest.actions)) throw new Error('manifest must include an actions array');
   return manifest;
 }
+const SUPPORTED_SIDE_EFFECTS = new Set(['read', 'write', 'send', 'delete']);
+
 export function inspectAction(action) {
   const missing = [];
   for (const field of ['name', 'description', 'sideEffect', 'approval', 'sampleInput']) if (!action[field]) missing.push(field);
   if (!Array.isArray(action.scopes) || action.scopes.length === 0) missing.push('scopes');
-  if (action.sideEffect && action.sideEffect !== 'read' && !action.idempotencyKey) missing.push('idempotencyKey');
-  const risk = action.sideEffect === 'write' || action.sideEffect === 'send' ? 'high' : action.sideEffect === 'read' ? 'low' : 'medium';
-  return { name: action.name || '<unnamed>', risk, missing, ready: missing.length === 0 };
+  const sideEffect = typeof action.sideEffect === 'string' ? action.sideEffect.trim().toLowerCase() : '';
+  const supportedSideEffect = SUPPORTED_SIDE_EFFECTS.has(sideEffect);
+  if (sideEffect && !supportedSideEffect) missing.push('sideEffect (supported: read, write, send, delete)');
+  if (supportedSideEffect && sideEffect !== 'read' && !action.idempotencyKey) missing.push('idempotencyKey');
+  const risk = sideEffect === 'read' ? 'low' : 'high';
+  return { name: action.name || '<unnamed>', sideEffect, risk, missing, ready: missing.length === 0 };
 }
 export function buildPlan(manifest) {
   return { connector: manifest.name || 'connector', actionCount: manifest.actions.length, actions: manifest.actions.map(inspectAction), liveExecution: false };
