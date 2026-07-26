@@ -32,7 +32,8 @@ node src/cli.js fixture examples/crm-manifest.json
 node src/cli.js skill examples/crm-manifest.json
 ```
 
-Unknown modes and extra positional arguments exit `2`; see
+Missing or invalid arguments exit `2`. Unreadable or malformed manifests and
+unready fixture actions exit `1`; see
 [CLI behavior](docs/CLI.md) for the release-script contract.
 
 ## Agent Skill

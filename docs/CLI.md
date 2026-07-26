@@ -11,12 +11,15 @@ connector-action-stub skill examples/crm-manifest.json
 ## Exit Codes
 
 - `0` - the selected mode rendered successfully.
-- `2` - the command used an unknown mode or provided extra positional
-  arguments.
+- `1` - the manifest could not be read or parsed, or fixture generation found
+  an unready action.
+- `2` - the command or manifest path was missing, the mode was unknown, or
+  extra positional arguments were provided.
 
-Extra positional arguments are rejected instead of ignored so release scripts,
-CI jobs, and agent dry runs fail loudly when they pass the wrong manifest path
-or include a stale argument.
+Argument errors print the usage line to stderr and do not render output.
+Manifest and readiness errors print an actionable error to stderr and likewise
+leave stdout empty, so release scripts, CI jobs, and agent dry runs cannot
+mistake a fallback or partial result for success.
 
 ## Manifest Side Effects
 
@@ -24,4 +27,6 @@ Each action's `sideEffect` must be one of `read`, `write`, `send`, or `delete`.
 Values are trimmed and matched case-insensitively. `read` actions are low risk
 and do not require an idempotency key. `write`, `send`, and `delete` actions are
 high risk and require `idempotencyKey`. Unsupported values are reported as
-high risk and leave the action unready.
+high risk and leave the action unready. Plan and skill modes report that
+readiness state. Fixture mode exits `1` instead of emitting an `ok: true`,
+`status: planned` response for an action that cannot be safely stubbed.
