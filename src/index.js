@@ -24,7 +24,13 @@ export function renderPlan(plan) {
   return `# Connector dry-run plan\n\nConnector: ${plan.connector}\nLive execution: ${plan.liveExecution}\n\n| Action | Risk | Readiness |\n|---|---|---|\n${rows}\n`;
 }
 export function buildFixture(manifest) {
-  return { connector: manifest.name || 'connector', generatedAt: 'stable-fixture', responses: manifest.actions.map((action) => ({ action: action.name, ok: true, dryRun: true, request: action.sampleInput || {}, response: { id: `dryrun-${action.name || 'action'}`, status: 'planned' } })) };
+  const plan = buildPlan(manifest);
+  const unready = plan.actions.filter((action) => !action.ready);
+  if (unready.length > 0) {
+    const details = unready.map((action) => `${action.name}: ${action.missing.join(', ')}`).join('; ');
+    throw new Error(`Cannot generate fixture for unready actions: ${details}`);
+  }
+  return { connector: plan.connector, generatedAt: 'stable-fixture', responses: manifest.actions.map((action, index) => ({ action: plan.actions[index].name, ok: true, dryRun: true, request: action.sampleInput, response: { id: `dryrun-${plan.actions[index].name}`, status: 'planned' } })) };
 }
 export function renderSkillGuide(manifest) {
   const plan = buildPlan(manifest);
