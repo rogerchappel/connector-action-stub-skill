@@ -37,7 +37,25 @@ test('fails closed for unsupported side effects', () => {
   assert.equal(action.ready, false);
 });
 test('generates deterministic fixtures and skill guide', () => { const manifest = parseManifest(fs.readFileSync('examples/crm-manifest.json', 'utf8')); assert.equal(buildFixture(manifest).generatedAt, 'stable-fixture'); assert.match(renderSkillGuide(manifest), /Approval Requirements/); });
+test('fixture generation rejects actions that are not ready', () => {
+  const manifest = {
+    actions: [{
+      name: 'archive', description: 'Archive records', sideEffect: 'archive',
+      approval: 'ask', scopes: ['crm'], sampleInput: {}, idempotencyKey: 'request-id'
+    }]
+  };
+  assert.throws(() => buildFixture(manifest), /Cannot generate fixture.*archive.*sideEffect/u);
+});
 test('cli exposes help and version metadata', () => { const help = spawnSync(process.execPath, ['src/cli.js', '--help'], { encoding: 'utf8' }); assert.equal(help.status, 0); assert.match(help.stdout, /connector-action-stub <plan\|fixture\|skill>/u); const version = spawnSync(process.execPath, ['src/cli.js', '--version'], { encoding: 'utf8' }); assert.equal(version.status, 0); assert.match(version.stdout, /^0\.1\.0\n$/u); });
+test('cli requires both a mode and manifest path', () => {
+  for (const args of [[], ['plan']]) {
+    const result = spawnSync(process.execPath, ['src/cli.js', ...args], { encoding: 'utf8' });
+    assert.equal(result.status, 2);
+    assert.equal(result.stdout, '');
+    assert.match(result.stderr, /Missing (command|manifest path)/u);
+    assert.match(result.stderr, /connector-action-stub <plan\|fixture\|skill>/u);
+  }
+});
 test('cli rejects extra positional arguments', () => {
   const result = spawnSync(process.execPath, ['src/cli.js', 'plan', 'examples/crm-manifest.json', 'ignored.json'], { encoding: 'utf8' });
   assert.equal(result.status, 2);
@@ -56,4 +74,15 @@ test('cli renders every documented mode from the sample manifest', () => {
   const guide = spawnSync(process.execPath, ['src/cli.js', 'skill', 'examples/crm-manifest.json'], { encoding: 'utf8' });
   assert.equal(guide.status, 0);
   assert.match(guide.stdout, /Approval Requirements/u);
+});
+test('cli reports malformed and unready manifests without rendering output', () => {
+  const malformed = spawnSync(process.execPath, ['src/cli.js', 'plan', 'tests/fixtures/malformed.json'], { encoding: 'utf8' });
+  assert.equal(malformed.status, 1);
+  assert.equal(malformed.stdout, '');
+  assert.match(malformed.stderr, /Failed to read manifest/u);
+
+  const unready = spawnSync(process.execPath, ['src/cli.js', 'fixture', 'tests/fixtures/unready-manifest.json'], { encoding: 'utf8' });
+  assert.equal(unready.status, 1);
+  assert.equal(unready.stdout, '');
+  assert.match(unready.stderr, /Cannot generate fixture.*archive.*sideEffect/u);
 });

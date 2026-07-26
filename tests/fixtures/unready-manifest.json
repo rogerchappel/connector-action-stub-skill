@@ -1,0 +1,14 @@
+{
+  "name": "unready-crm",
+  "actions": [
+    {
+      "name": "archive",
+      "description": "Archive a CRM record",
+      "sideEffect": "archive",
+      "approval": "required",
+      "scopes": ["crm.write"],
+      "sampleInput": {"id": "record-1"},
+      "idempotencyKey": "archive-record-1"
+    }
+  ]
+}
