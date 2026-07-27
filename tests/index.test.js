@@ -28,6 +28,41 @@ test('keeps manifest-controlled text inside Markdown table cells', () => {
   assert.equal(output.split('\n').filter((line) => line.startsWith('| read')).length, 1);
 });
 test('flags missing approval fields', () => { const plan = buildPlan({ actions: [{ name: 'send' }] }); assert.ok(plan.actions[0].missing.includes('approval')); });
+test('marks malformed action fields unready', () => {
+  const malformed = {
+    name: { bad: true },
+    description: 7,
+    sideEffect: 'read',
+    approval: {},
+    scopes: [null, '', '  ', 42],
+    sampleInput: 'not-an-object',
+    idempotencyKey: []
+  };
+  assert.deepEqual(inspectAction(malformed), {
+    name: '<unnamed>',
+    sideEffect: 'read',
+    risk: 'low',
+    missing: [
+      'name (non-empty string)',
+      'description (non-empty string)',
+      'approval (non-empty string)',
+      'scopes (non-empty array of non-empty strings)',
+      'sampleInput (object)'
+    ],
+    ready: false
+  });
+});
+test('requires a non-empty string idempotency key for non-read actions', () => {
+  const base = {
+    name: 'send', description: 'Send a message', sideEffect: 'send',
+    approval: 'required', scopes: ['messages.send'], sampleInput: {}
+  };
+  for (const idempotencyKey of [undefined, '', '  ', 42, {}]) {
+    const action = inspectAction({ ...base, idempotencyKey });
+    assert.ok(action.missing.includes('idempotencyKey (non-empty string)'));
+    assert.equal(action.ready, false);
+  }
+});
 test('normalizes supported side effects before risk and readiness checks', () => {
   const base = { name: 'action', description: 'An action', approval: 'ask', scopes: ['crm'], sampleInput: {} };
   assert.deepEqual(inspectAction({ ...base, sideEffect: ' Read ' }), {
@@ -121,4 +156,27 @@ test('cli reports invalid action entries as manifest validation errors', (contex
     assert.match(result.stderr, new RegExp(`Failed to read manifest.*actions\\[0\\].*received ${label}`, 'u'));
     assert.doesNotMatch(result.stderr, /TypeError|Cannot read properties|\\s+at\\s/u);
   }
+});
+test('cli never presents malformed action fields as ready', (context) => {
+  const path = `/tmp/connector-action-stub-${process.pid}-malformed-fields.json`;
+  fs.writeFileSync(path, JSON.stringify({
+    name: 'malformed',
+    actions: [{
+      name: { bad: true }, description: 7, sideEffect: 'read', approval: {},
+      scopes: [null], sampleInput: 'not-an-object'
+    }]
+  }));
+  context.after(() => fs.rmSync(path, { force: true }));
+
+  for (const mode of ['plan', 'skill']) {
+    const result = spawnSync(process.execPath, ['src/cli.js', mode, path], { encoding: 'utf8' });
+    assert.equal(result.status, 0);
+    assert.match(result.stdout, /missing name \(non-empty string\)/u);
+    assert.doesNotMatch(result.stdout, /\|\s*ready\s*\||:\s*low risk, ready/u);
+  }
+
+  const fixture = spawnSync(process.execPath, ['src/cli.js', 'fixture', path], { encoding: 'utf8' });
+  assert.equal(fixture.status, 1);
+  assert.equal(fixture.stdout, '');
+  assert.match(fixture.stderr, /Cannot generate fixture.*name \(non-empty string\)/u);
 });
