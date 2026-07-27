@@ -27,7 +27,7 @@ test('keeps manifest-controlled text inside Markdown table cells', () => {
   assert.match(output, /\| read\\\|records<br>next \| low\\\|risk \| missing approval\\\|owner, sample<br>input \|/u);
   assert.equal(output.split('\n').filter((line) => line.startsWith('| read')).length, 1);
 });
-test('flags missing approval fields', () => { const plan = buildPlan({ actions: [{ name: 'send' }] }); assert.ok(plan.actions[0].missing.includes('approval')); });
+test('flags missing approval fields', () => { const plan = buildPlan({ actions: [{ name: 'send' }] }); assert.ok(plan.actions[0].missing.includes('approval (non-empty string)')); });
 test('marks malformed action fields unready', () => {
   const malformed = {
     name: { bad: true },
@@ -47,7 +47,8 @@ test('marks malformed action fields unready', () => {
       'description (non-empty string)',
       'approval (non-empty string)',
       'scopes (non-empty array of non-empty strings)',
-      'sampleInput (object)'
+      'sampleInput (object)',
+      'idempotencyKey (non-empty string when provided)'
     ],
     ready: false
   });

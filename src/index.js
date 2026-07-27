@@ -17,17 +17,29 @@ const escapeMarkdownText = (value) => String(value)
   .replaceAll('\\', '\\\\')
   .replaceAll('|', '\\|')
   .replace(/\r\n?|\n/gu, '<br>');
+const isNonEmptyString = (value) => typeof value === 'string' && value.trim().length > 0;
+const isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 
 export function inspectAction(action) {
   const missing = [];
-  for (const field of ['name', 'description', 'sideEffect', 'approval', 'sampleInput']) if (!action[field]) missing.push(field);
-  if (!Array.isArray(action.scopes) || action.scopes.length === 0) missing.push('scopes');
+  if (!isNonEmptyString(action.name)) missing.push('name (non-empty string)');
+  if (!isNonEmptyString(action.description)) missing.push('description (non-empty string)');
+  if (!isNonEmptyString(action.sideEffect)) missing.push('sideEffect');
+  if (!isNonEmptyString(action.approval)) missing.push('approval (non-empty string)');
+  if (!Array.isArray(action.scopes) || action.scopes.length === 0 || !action.scopes.every(isNonEmptyString)) {
+    missing.push('scopes (non-empty array of non-empty strings)');
+  }
+  if (!isObject(action.sampleInput)) missing.push('sampleInput (object)');
   const sideEffect = typeof action.sideEffect === 'string' ? action.sideEffect.trim().toLowerCase() : '';
   const supportedSideEffect = SUPPORTED_SIDE_EFFECTS.has(sideEffect);
   if (sideEffect && !supportedSideEffect) missing.push('sideEffect (supported: read, write, send, delete)');
-  if (supportedSideEffect && sideEffect !== 'read' && !action.idempotencyKey) missing.push('idempotencyKey');
+  if (supportedSideEffect && sideEffect !== 'read' && !isNonEmptyString(action.idempotencyKey)) {
+    missing.push('idempotencyKey (non-empty string)');
+  } else if (action.idempotencyKey !== undefined && !isNonEmptyString(action.idempotencyKey)) {
+    missing.push('idempotencyKey (non-empty string when provided)');
+  }
   const risk = sideEffect === 'read' ? 'low' : 'high';
-  return { name: action.name || '<unnamed>', sideEffect, risk, missing, ready: missing.length === 0 };
+  return { name: isNonEmptyString(action.name) ? action.name : '<unnamed>', sideEffect, risk, missing, ready: missing.length === 0 };
 }
 export function buildPlan(manifest) {
   return { connector: manifest.name || 'connector', actionCount: manifest.actions.length, actions: manifest.actions.map(inspectAction), liveExecution: false };
