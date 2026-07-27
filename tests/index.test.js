@@ -2,8 +2,31 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { spawnSync } from 'node:child_process';
-import { parseManifest, inspectAction, buildPlan, buildFixture, renderSkillGuide } from '../src/index.js';
+import { parseManifest, inspectAction, buildPlan, renderPlan, buildFixture, renderSkillGuide } from '../src/index.js';
 test('builds dry-run plan for connector manifest', () => { const plan = buildPlan(parseManifest(fs.readFileSync('examples/crm-manifest.json', 'utf8'))); assert.equal(plan.liveExecution, false); assert.equal(plan.actions[0].ready, true); });
+test('rejects manifest action entries that are not objects', () => {
+  for (const [index, value] of [null, 'read', 42, true, []].entries()) {
+    assert.throws(
+      () => parseManifest(JSON.stringify({ actions: [value] })),
+      new Error(`manifest actions[0] must be a non-null object (received ${['null', 'string', 'number', 'boolean', 'array'][index]})`)
+    );
+  }
+});
+test('keeps manifest-controlled text inside Markdown table cells', () => {
+  const output = renderPlan({
+    connector: 'demo|connector\nsecond line',
+    liveExecution: false,
+    actions: [{
+      name: 'read|records\r\nnext',
+      risk: 'low|risk',
+      ready: false,
+      missing: ['approval|owner', 'sample\ninput']
+    }]
+  });
+  assert.match(output, /Connector: demo\\\|connector<br>second line/u);
+  assert.match(output, /\| read\\\|records<br>next \| low\\\|risk \| missing approval\\\|owner, sample<br>input \|/u);
+  assert.equal(output.split('\n').filter((line) => line.startsWith('| read')).length, 1);
+});
 test('flags missing approval fields', () => { const plan = buildPlan({ actions: [{ name: 'send' }] }); assert.ok(plan.actions[0].missing.includes('approval')); });
 test('normalizes supported side effects before risk and readiness checks', () => {
   const base = { name: 'action', description: 'An action', approval: 'ask', scopes: ['crm'], sampleInput: {} };
@@ -85,4 +108,17 @@ test('cli reports malformed and unready manifests without rendering output', () 
   assert.equal(unready.status, 1);
   assert.equal(unready.stdout, '');
   assert.match(unready.stderr, /Cannot generate fixture.*archive.*sideEffect/u);
+});
+test('cli reports invalid action entries as manifest validation errors', (context) => {
+  for (const [label, value] of [['null', null], ['string', 'read'], ['number', 42], ['array', []]]) {
+    const path = `/tmp/connector-action-stub-${process.pid}-${label}.json`;
+    fs.writeFileSync(path, JSON.stringify({ actions: [value] }));
+    context.after(() => fs.rmSync(path, { force: true }));
+
+    const result = spawnSync(process.execPath, ['src/cli.js', 'plan', path], { encoding: 'utf8' });
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.match(result.stderr, new RegExp(`Failed to read manifest.*actions\\[0\\].*received ${label}`, 'u'));
+    assert.doesNotMatch(result.stderr, /TypeError|Cannot read properties|\\s+at\\s/u);
+  }
 });
