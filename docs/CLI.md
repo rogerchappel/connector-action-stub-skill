@@ -21,6 +21,23 @@ Manifest and readiness errors print an actionable error to stderr and likewise
 leave stdout empty, so release scripts, CI jobs, and agent dry runs cannot
 mistake a fallback or partial result for success.
 
+## Manifest Shape
+
+The manifest must be a JSON object with an `actions` array. Every entry in
+`actions` must be a non-null JSON object; `null`, scalar values, and arrays are
+rejected before planning. Invalid entries produce a stable diagnostic that
+identifies the array index and received type, for example:
+
+```text
+Failed to read manifest "manifest.json": manifest actions[0] must be a non-null object (received null)
+```
+
+Action objects use `name`, `description`, `scopes`, `sideEffect`, `approval`,
+and `sampleInput`. Non-read actions also require `idempotencyKey`.
+
+Generated plan tables escape Markdown cell delimiters and convert embedded line
+breaks to `<br>`, so connector and action text cannot add rows or columns.
+
 ## Manifest Side Effects
 
 Each action's `sideEffect` must be one of `read`, `write`, `send`, or `delete`.
