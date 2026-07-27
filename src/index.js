@@ -1,9 +1,22 @@
 export function parseManifest(text) {
   const manifest = JSON.parse(text);
+  if (manifest === null || typeof manifest !== 'object' || Array.isArray(manifest)) {
+    throw new Error('manifest must be a non-null object');
+  }
   if (!Array.isArray(manifest.actions)) throw new Error('manifest must include an actions array');
+  for (const [index, action] of manifest.actions.entries()) {
+    if (action === null || typeof action !== 'object' || Array.isArray(action)) {
+      const received = action === null ? 'null' : Array.isArray(action) ? 'array' : typeof action;
+      throw new Error(`manifest actions[${index}] must be a non-null object (received ${received})`);
+    }
+  }
   return manifest;
 }
 const SUPPORTED_SIDE_EFFECTS = new Set(['read', 'write', 'send', 'delete']);
+const escapeMarkdownText = (value) => String(value)
+  .replaceAll('\\', '\\\\')
+  .replaceAll('|', '\\|')
+  .replace(/\r\n?|\n/gu, '<br>');
 
 export function inspectAction(action) {
   const missing = [];
@@ -20,8 +33,11 @@ export function buildPlan(manifest) {
   return { connector: manifest.name || 'connector', actionCount: manifest.actions.length, actions: manifest.actions.map(inspectAction), liveExecution: false };
 }
 export function renderPlan(plan) {
-  const rows = plan.actions.map((action) => `| ${action.name} | ${action.risk} | ${action.ready ? 'ready' : 'missing ' + action.missing.join(', ')} |`).join('\n');
-  return `# Connector dry-run plan\n\nConnector: ${plan.connector}\nLive execution: ${plan.liveExecution}\n\n| Action | Risk | Readiness |\n|---|---|---|\n${rows}\n`;
+  const rows = plan.actions.map((action) => {
+    const readiness = action.ready ? 'ready' : `missing ${action.missing.join(', ')}`;
+    return `| ${escapeMarkdownText(action.name)} | ${escapeMarkdownText(action.risk)} | ${escapeMarkdownText(readiness)} |`;
+  }).join('\n');
+  return `# Connector dry-run plan\n\nConnector: ${escapeMarkdownText(plan.connector)}\nLive execution: ${plan.liveExecution}\n\n| Action | Risk | Readiness |\n|---|---|---|\n${rows}\n`;
 }
 export function buildFixture(manifest) {
   const plan = buildPlan(manifest);
