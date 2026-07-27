@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Validate action field types and non-empty constraints before marking plans,
+  fixtures, or generated skill guidance ready.
+
 ## [Unreleased]
 
 - Require explicit CLI arguments and reject unready fixture generation instead

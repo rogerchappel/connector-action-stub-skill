@@ -32,8 +32,18 @@ identifies the array index and received type, for example:
 Failed to read manifest "manifest.json": manifest actions[0] must be a non-null object (received null)
 ```
 
-Action objects use `name`, `description`, `scopes`, `sideEffect`, `approval`,
-and `sampleInput`. Non-read actions also require `idempotencyKey`.
+Action fields use the following validation contract:
+
+- `name`, `description`, and `approval` are non-empty strings.
+- `scopes` is a non-empty array whose entries are non-empty strings.
+- `sampleInput` is a non-null JSON object (not an array).
+- `idempotencyKey`, when present, is a non-empty string and is required for
+  every non-read action.
+- `sideEffect` is a non-empty string with the supported values described
+  below.
+
+Malformed fields leave an action unready in plan and skill output. Fixture
+generation fails closed when any action is unready.
 
 Generated plan tables escape Markdown cell delimiters and convert embedded line
 breaks to `<br>`, so connector and action text cannot add rows or columns.
