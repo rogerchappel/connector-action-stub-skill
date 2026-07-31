@@ -16,6 +16,8 @@ const required = [
   'package.json',
   'src/cli.js',
   'src/index.js',
+  'dist/src/cli.js',
+  'dist/src/index.js',
   'scripts/package-smoke.js',
   'docs/CLI.md',
   'examples/crm-manifest.json',
@@ -31,6 +33,12 @@ const missing = required.filter((file) => !files.has(file));
 
 if (missing.length > 0) {
   console.error(`Package smoke missing expected files: ${missing.join(', ')}`);
+  process.exit(1);
+}
+
+const nestedBuildFiles = [...files].filter((file) => file.startsWith('dist/src/src/'));
+if (nestedBuildFiles.length > 0) {
+  console.error(`Package smoke found nested build output: ${nestedBuildFiles.join(', ')}`);
   process.exit(1);
 }
 
