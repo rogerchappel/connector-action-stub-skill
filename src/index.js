@@ -58,7 +58,7 @@ export function buildFixture(manifest) {
     const details = unready.map((action) => `${action.name}: ${action.missing.join(', ')}`).join('; ');
     throw new Error(`Cannot generate fixture for unready actions: ${details}`);
   }
-  return { connector: plan.connector, generatedAt: 'stable-fixture', responses: manifest.actions.map((action, index) => ({ action: plan.actions[index].name, ok: true, dryRun: true, request: action.sampleInput, response: { id: `dryrun-${plan.actions[index].name}`, status: 'planned' } })) };
+  return { connector: plan.connector, generatedAt: 'stable-fixture', responses: manifest.actions.map((action, index) => ({ action: plan.actions[index].name, ok: true, dryRun: true, request: action.sampleInput, response: { id: `dryrun-${plan.actions[index].name}-${index + 1}`, status: 'planned' } })) };
 }
 export function renderSkillGuide(manifest) {
   const plan = buildPlan(manifest);
