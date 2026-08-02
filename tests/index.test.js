@@ -96,6 +96,23 @@ test('fails closed for unsupported side effects', () => {
   assert.equal(action.ready, false);
 });
 test('generates deterministic fixtures and skill guide', () => { const manifest = parseManifest(fs.readFileSync('examples/crm-manifest.json', 'utf8')); assert.equal(buildFixture(manifest).generatedAt, 'stable-fixture'); assert.match(renderSkillGuide(manifest), /Approval Requirements/); });
+test('generates stable, distinct response IDs for every action', () => {
+  const action = {
+    name: 'same', description: 'Read records', sideEffect: 'read',
+    approval: 'not required', scopes: ['records.read'], sampleInput: {}
+  };
+  const manifest = { name: 'duplicate-actions', actions: [action, { ...action, sampleInput: { page: 2 } }] };
+
+  const first = buildFixture(manifest);
+  const second = buildFixture(manifest);
+
+  assert.deepEqual(first, second);
+  assert.deepEqual(first.responses.map(({ response }) => response.id), ['dryrun-same-1', 'dryrun-same-2']);
+  assert.equal(new Set(first.responses.map(({ response }) => response.id)).size, 2);
+
+  const single = buildFixture({ name: 'single-action', actions: [action] });
+  assert.equal(single.responses[0].response.id, 'dryrun-same-1');
+});
 test('fixture generation rejects actions that are not ready', () => {
   const manifest = {
     actions: [{
