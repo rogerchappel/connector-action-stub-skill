@@ -4,6 +4,8 @@
 
 - Validate action field types and non-empty constraints before marking plans,
   fixtures, or generated skill guidance ready.
+- Include each action's manifest position in fixture response IDs so duplicate
+  action names still produce deterministic, distinct identifiers.
 
 ## [Unreleased]
 

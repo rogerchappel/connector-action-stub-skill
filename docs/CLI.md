@@ -45,6 +45,11 @@ Action fields use the following validation contract:
 Malformed fields leave an action unready in plan and skill output. Fixture
 generation fails closed when any action is unready.
 
+Every generated fixture response has a deterministic ID in the form
+`dryrun-<action-name>-<position>`, where positions start at `1` in manifest
+order. Including the position keeps IDs distinct when multiple ready actions
+share a name while producing identical output for repeated runs.
+
 Generated plan tables escape Markdown cell delimiters and convert embedded line
 breaks to `<br>`, so connector and action text cannot add rows or columns.
 
