@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fail closed when high-risk actions deny human approval, with normalized
+  approval-contract validation across library and CLI fixture generation.
 - Validate action field types and non-empty constraints before marking plans,
   fixtures, or generated skill guidance ready.
 - Include each action's manifest position in fixture response IDs so duplicate

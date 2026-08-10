@@ -19,7 +19,15 @@ unready, high-risk action.
 
 ## Approval Requirements
 
-Require explicit human approval before converting a generated dry-run plan into live connector execution.
+Every action needs non-empty approval metadata. A read may state that approval
+is not required or name a boundary check. A write, send, or delete must
+describe explicit human approval before live execution.
+
+For high-risk actions, approval values that normalize to `not required`,
+`approval not required`, `no approval required`, `none`, `absent`,
+`approval absent`, or `approval is absent` are unready. Normalization ignores
+case, trims the value, and collapses whitespace. Fixture generation then fails
+without producing an `ok: true` planned response.
 
 ## Examples
 
@@ -29,7 +37,8 @@ Require explicit human approval before converting a generated dry-run plan into 
 
 ## Validation
 
-Run `npm test`, `npm run smoke`, and `bash scripts/validate.sh`.
+Run `npm run release:check`. It includes syntax, library and CLI regression,
+build, documented sample-manifest smoke, and package-content checks.
 
 ## Limitations
 

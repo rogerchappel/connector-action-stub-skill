@@ -37,6 +37,12 @@ unready fixture actions exit `1`; see
 [CLI behavior](docs/CLI.md) for the accepted manifest shape, validation
 diagnostics, and release-script contract.
 
+Read actions may document that approval is not required. Write, send, and
+delete actions must instead describe explicit human approval; normalized
+approval-denial values leave those high-risk actions unready and prevent
+fixture generation. The full accepted vocabulary and normalization rules are
+documented in [CLI behavior](docs/CLI.md#approval-contract).
+
 ## Agent Skill
 
 See [SKILL.md](./SKILL.md) for when to use this package, side-effect boundaries, approval requirements, examples, and validation.

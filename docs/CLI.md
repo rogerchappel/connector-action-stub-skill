@@ -62,3 +62,17 @@ high risk and require `idempotencyKey`. Unsupported values are reported as
 high risk and leave the action unready. Plan and skill modes report that
 readiness state. Fixture mode exits `1` instead of emitting an `ok: true`,
 `status: planned` response for an action that cannot be safely stubbed.
+
+## Approval Contract
+
+Every action must provide non-empty approval metadata. For a `read`, that text
+may document that approval is not required or describe an account-boundary
+check. For `write`, `send`, and `delete`, the text must describe an explicit
+human approval requirement.
+
+High-risk actions fail closed when normalized approval text is `not required`,
+`approval not required`, `no approval required`, `none`, `absent`,
+`approval absent`, or `approval is absent`. Matching trims surrounding
+whitespace, collapses internal whitespace, and ignores case. Plan and skill
+output mark the action unready, while fixture mode exits `1` without emitting
+an `ok: true` planned response.
