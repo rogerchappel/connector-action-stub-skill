@@ -64,6 +64,28 @@ test('requires a non-empty string idempotency key for non-read actions', () => {
     assert.equal(action.ready, false);
   }
 });
+test('rejects approval denial metadata for high-risk actions', () => {
+  const base = {
+    name: 'send', description: 'Send a message', sideEffect: 'send',
+    scopes: ['messages.send'], sampleInput: {}, idempotencyKey: 'request-id'
+  };
+  for (const approval of [
+    'not required', '  NOT   REQUIRED  ', 'approval not required',
+    'no approval required', 'none', 'absent', 'approval is absent'
+  ]) {
+    const action = inspectAction({ ...base, approval });
+    assert.ok(action.missing.includes('approval (must require explicit human approval for write, send, and delete actions)'));
+    assert.equal(action.ready, false);
+  }
+});
+test('allows contextual approval metadata for reads', () => {
+  const action = inspectAction({
+    name: 'lookup', description: 'Read a contact', sideEffect: 'read',
+    approval: '  NOT   REQUIRED  ', scopes: ['contacts.read'], sampleInput: {}
+  });
+  assert.equal(action.ready, true);
+  assert.deepEqual(action.missing, []);
+});
 test('normalizes supported side effects before risk and readiness checks', () => {
   const base = { name: 'action', description: 'An action', approval: 'ask', scopes: ['crm'], sampleInput: {} };
   assert.deepEqual(inspectAction({ ...base, sideEffect: ' Read ' }), {
@@ -122,6 +144,19 @@ test('fixture generation rejects actions that are not ready', () => {
   };
   assert.throws(() => buildFixture(manifest), /Cannot generate fixture.*archive.*sideEffect/u);
 });
+test('fixture generation rejects high-risk actions that deny approval', () => {
+  const manifest = {
+    actions: [{
+      name: 'send', description: 'Send a message', sideEffect: 'send',
+      approval: ' Approval   Not Required ', scopes: ['messages.send'],
+      sampleInput: { text: 'hi' }, idempotencyKey: 'request-id'
+    }]
+  };
+  assert.throws(
+    () => buildFixture(manifest),
+    /Cannot generate fixture.*send.*must require explicit human approval/u
+  );
+});
 test('cli exposes help and version metadata', () => { const help = spawnSync(process.execPath, ['src/cli.js', '--help'], { encoding: 'utf8' }); assert.equal(help.status, 0); assert.match(help.stdout, /connector-action-stub <plan\|fixture\|skill>/u); const version = spawnSync(process.execPath, ['src/cli.js', '--version'], { encoding: 'utf8' }); assert.equal(version.status, 0); assert.match(version.stdout, /^0\.1\.0\n$/u); });
 test('cli requires both a mode and manifest path', () => {
   for (const args of [[], ['plan']]) {
@@ -161,6 +196,27 @@ test('cli reports malformed and unready manifests without rendering output', () 
   assert.equal(unready.status, 1);
   assert.equal(unready.stdout, '');
   assert.match(unready.stderr, /Cannot generate fixture.*archive.*sideEffect/u);
+});
+test('cli fails closed for a high-risk action without required approval', (context) => {
+  const path = `/tmp/connector-action-stub-${process.pid}-approval-denied.json`;
+  fs.writeFileSync(path, JSON.stringify({
+    name: 'messages',
+    actions: [{
+      name: 'send', description: 'Send a message', sideEffect: 'send',
+      approval: ' No   Approval Required ', scopes: ['messages.send'],
+      sampleInput: { text: 'hi' }, idempotencyKey: 'request-id'
+    }]
+  }));
+  context.after(() => fs.rmSync(path, { force: true }));
+
+  const plan = spawnSync(process.execPath, ['src/cli.js', 'plan', path], { encoding: 'utf8' });
+  assert.equal(plan.status, 0);
+  assert.match(plan.stdout, /missing approval \(must require explicit human approval/u);
+
+  const fixture = spawnSync(process.execPath, ['src/cli.js', 'fixture', path], { encoding: 'utf8' });
+  assert.equal(fixture.status, 1);
+  assert.equal(fixture.stdout, '');
+  assert.match(fixture.stderr, /Cannot generate fixture.*must require explicit human approval/u);
 });
 test('cli reports invalid action entries as manifest validation errors', (context) => {
   for (const [label, value] of [['null', null], ['string', 'read'], ['number', 42], ['array', []]]) {
