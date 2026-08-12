@@ -21,12 +21,10 @@ unready, high-risk action.
 
 Every action needs non-empty approval metadata. A read may state that approval
 is not required or name a boundary check. A write, send, or delete must
-describe explicit human approval before live execution.
-
-For high-risk actions, approval values that normalize to `not required`,
-`approval not required`, `no approval required`, `none`, `absent`,
-`approval absent`, or `approval is absent` are unready. Normalization ignores
-case, trims the value, and collapses whitespace. Fixture generation then fails
+begin with one of the affirmative human-approval forms documented in
+[`docs/CLI.md`](docs/CLI.md#approval-contract). Normalization ignores case,
+trims the value, and collapses whitespace. Missing, denial, boolean-like, and
+arbitrary non-affirmative prose are unready. Fixture generation then fails
 without producing an `ok: true` planned response.
 
 ## Examples

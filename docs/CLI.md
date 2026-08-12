@@ -70,9 +70,19 @@ may document that approval is not required or describe an account-boundary
 check. For `write`, `send`, and `delete`, the text must describe an explicit
 human approval requirement.
 
-High-risk actions fail closed when normalized approval text is `not required`,
-`approval not required`, `no approval required`, `none`, `absent`,
-`approval absent`, or `approval is absent`. Matching trims surrounding
-whitespace, collapses internal whitespace, and ignores case. Plan and skill
-output mark the action unready, while fixture mode exits `1` without emitting
-an `ok: true` planned response.
+For a high-risk action, the normalized approval text must start with one of
+these affirmative forms (the bracketed words show the permitted options):
+
+- `require[s] [explicit] human approval`
+- `human approval [is] required`
+- `must obtain [explicit] human approval`
+- `must receive [explicit] human approval`
+
+Normalization trims surrounding whitespace, collapses internal whitespace,
+and ignores case. More detail may follow the accepted prefix, separated by
+whitespace or punctuation. All other wording fails closed, including missing
+text, denial values such as `denied`, `false`, or `no`, and arbitrary prose
+that does not begin with an accepted form. Plan and skill output mark the
+action unready, while fixture mode exits `1` without emitting an `ok: true`
+planned response. This affirmative allowlist applies only to `write`, `send`,
+and `delete`; documented read-action behavior is unchanged.
