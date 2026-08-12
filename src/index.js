@@ -13,15 +13,7 @@ export function parseManifest(text) {
   return manifest;
 }
 const SUPPORTED_SIDE_EFFECTS = new Set(['read', 'write', 'send', 'delete']);
-const APPROVAL_DENIALS = new Set([
-  'not required',
-  'approval not required',
-  'no approval required',
-  'none',
-  'absent',
-  'approval absent',
-  'approval is absent'
-]);
+const AFFIRMATIVE_HUMAN_APPROVAL = /^(?:requires? (?:explicit )?human approval|human approval (?:is )?required|must (?:obtain|receive) (?:explicit )?human approval)(?:$|[\s:;,.!?()[\]{}-])/u;
 const escapeMarkdownText = (value) => String(value)
   .replaceAll('\\', '\\\\')
   .replaceAll('|', '\\|')
@@ -45,8 +37,8 @@ export function inspectAction(action) {
   const sideEffect = typeof action.sideEffect === 'string' ? action.sideEffect.trim().toLowerCase() : '';
   const supportedSideEffect = SUPPORTED_SIDE_EFFECTS.has(sideEffect);
   if (sideEffect && !supportedSideEffect) missing.push('sideEffect (supported: read, write, send, delete)');
-  if (supportedSideEffect && sideEffect !== 'read' && APPROVAL_DENIALS.has(normalizeApproval(action.approval))) {
-    missing.push('approval (must require explicit human approval for write, send, and delete actions)');
+  if (supportedSideEffect && sideEffect !== 'read' && !AFFIRMATIVE_HUMAN_APPROVAL.test(normalizeApproval(action.approval))) {
+    missing.push('approval (must affirm an explicit human approval requirement for write, send, and delete actions)');
   }
   if (supportedSideEffect && sideEffect !== 'read' && !isNonEmptyString(action.idempotencyKey)) {
     missing.push('idempotencyKey (non-empty string)');
