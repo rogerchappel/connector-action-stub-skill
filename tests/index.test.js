@@ -71,11 +71,31 @@ test('rejects approval denial metadata for high-risk actions', () => {
   };
   for (const approval of [
     'not required', '  NOT   REQUIRED  ', 'approval not required',
-    'no approval required', 'none', 'absent', 'approval is absent'
+    'no approval required', 'none', 'absent', 'approval is absent',
+    'denied', 'false', 'no', 'ask', 'approval handled elsewhere',
+    'this prose does not affirm a human approval requirement'
   ]) {
     const action = inspectAction({ ...base, approval });
     assert.ok(action.missing.includes('approval (must require explicit human approval for write, send, and delete actions)'));
     assert.equal(action.ready, false);
+  }
+});
+test('accepts affirmative human approval metadata for high-risk actions', () => {
+  const base = {
+    name: 'send', description: 'Send a message', sideEffect: 'send',
+    scopes: ['messages.send'], sampleInput: {}, idempotencyKey: 'request-id'
+  };
+  for (const approval of [
+    'Require human approval',
+    '  REQUIRES   EXPLICIT   HUMAN   APPROVAL before sending. ',
+    'Human approval required: show the recipient and message.',
+    'Human approval is required before live execution.',
+    'Must obtain human approval before sending.',
+    'Must receive explicit human approval before sending.'
+  ]) {
+    const action = inspectAction({ ...base, approval });
+    assert.deepEqual(action.missing, []);
+    assert.equal(action.ready, true);
   }
 });
 test('allows contextual approval metadata for reads', () => {
@@ -197,26 +217,31 @@ test('cli reports malformed and unready manifests without rendering output', () 
   assert.equal(unready.stdout, '');
   assert.match(unready.stderr, /Cannot generate fixture.*archive.*sideEffect/u);
 });
-test('cli fails closed for a high-risk action without required approval', (context) => {
-  const path = `/tmp/connector-action-stub-${process.pid}-approval-denied.json`;
-  fs.writeFileSync(path, JSON.stringify({
-    name: 'messages',
-    actions: [{
-      name: 'send', description: 'Send a message', sideEffect: 'send',
-      approval: ' No   Approval Required ', scopes: ['messages.send'],
-      sampleInput: { text: 'hi' }, idempotencyKey: 'request-id'
-    }]
-  }));
-  context.after(() => fs.rmSync(path, { force: true }));
+test('cli fails closed for high-risk actions without affirmative human approval', (context) => {
+  for (const [label, approval] of [
+    ['denied', 'denied'], ['false', 'false'], ['no', 'no'],
+    ['ambiguous', 'a reviewer might look at this later']
+  ]) {
+    const path = `/tmp/connector-action-stub-${process.pid}-approval-${label}.json`;
+    fs.writeFileSync(path, JSON.stringify({
+      name: 'messages',
+      actions: [{
+        name: 'send', description: 'Send a message', sideEffect: 'send', approval,
+        scopes: ['messages.send'], sampleInput: { text: 'hi' }, idempotencyKey: 'request-id'
+      }]
+    }));
+    context.after(() => fs.rmSync(path, { force: true }));
 
-  const plan = spawnSync(process.execPath, ['src/cli.js', 'plan', path], { encoding: 'utf8' });
-  assert.equal(plan.status, 0);
-  assert.match(plan.stdout, /missing approval \(must require explicit human approval/u);
+    const plan = spawnSync(process.execPath, ['src/cli.js', 'plan', path], { encoding: 'utf8' });
+    assert.equal(plan.status, 0);
+    assert.match(plan.stdout, /missing approval \(must affirm an explicit human approval requirement/u);
+    assert.doesNotMatch(plan.stdout, /\| send \| high \| ready \|/u);
 
-  const fixture = spawnSync(process.execPath, ['src/cli.js', 'fixture', path], { encoding: 'utf8' });
-  assert.equal(fixture.status, 1);
-  assert.equal(fixture.stdout, '');
-  assert.match(fixture.stderr, /Cannot generate fixture.*must require explicit human approval/u);
+    const fixture = spawnSync(process.execPath, ['src/cli.js', 'fixture', path], { encoding: 'utf8' });
+    assert.equal(fixture.status, 1);
+    assert.equal(fixture.stdout, '');
+    assert.match(fixture.stderr, /Cannot generate fixture.*must affirm an explicit human approval requirement/u);
+  }
 });
 test('cli reports invalid action entries as manifest validation errors', (context) => {
   for (const [label, value] of [['null', null], ['string', 'read'], ['number', 42], ['array', []]]) {
