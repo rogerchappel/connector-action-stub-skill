@@ -76,7 +76,7 @@ test('rejects approval denial metadata for high-risk actions', () => {
     'this prose does not affirm a human approval requirement'
   ]) {
     const action = inspectAction({ ...base, approval });
-    assert.ok(action.missing.includes('approval (must require explicit human approval for write, send, and delete actions)'));
+    assert.ok(action.missing.includes('approval (must affirm an explicit human approval requirement for write, send, and delete actions)'));
     assert.equal(action.ready, false);
   }
 });
@@ -107,7 +107,7 @@ test('allows contextual approval metadata for reads', () => {
   assert.deepEqual(action.missing, []);
 });
 test('normalizes supported side effects before risk and readiness checks', () => {
-  const base = { name: 'action', description: 'An action', approval: 'ask', scopes: ['crm'], sampleInput: {} };
+  const base = { name: 'action', description: 'An action', approval: 'Require human approval', scopes: ['crm'], sampleInput: {} };
   assert.deepEqual(inspectAction({ ...base, sideEffect: ' Read ' }), {
     name: 'action', sideEffect: 'read', risk: 'low', missing: [], ready: true
   });
@@ -120,7 +120,7 @@ test('normalizes supported side effects before risk and readiness checks', () =>
 });
 test('classifies delete actions as high risk', () => {
   const action = inspectAction({
-    name: 'erase', description: 'Delete records', sideEffect: 'DELETE', approval: 'ask',
+    name: 'erase', description: 'Delete records', sideEffect: 'DELETE', approval: 'Require human approval',
     scopes: ['crm'], sampleInput: {}, idempotencyKey: 'request-id'
   });
   assert.equal(action.sideEffect, 'delete');
@@ -174,7 +174,7 @@ test('fixture generation rejects high-risk actions that deny approval', () => {
   };
   assert.throws(
     () => buildFixture(manifest),
-    /Cannot generate fixture.*send.*must require explicit human approval/u
+    /Cannot generate fixture.*send.*must affirm an explicit human approval requirement/u
   );
 });
 test('cli exposes help and version metadata', () => { const help = spawnSync(process.execPath, ['src/cli.js', '--help'], { encoding: 'utf8' }); assert.equal(help.status, 0); assert.match(help.stdout, /connector-action-stub <plan\|fixture\|skill>/u); const version = spawnSync(process.execPath, ['src/cli.js', '--version'], { encoding: 'utf8' }); assert.equal(version.status, 0); assert.match(version.stdout, /^0\.1\.0\n$/u); });
