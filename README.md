@@ -70,7 +70,7 @@ npm run package:smoke
 npm run release:check
 ```
 
-`npm run smoke` exercises the documented `plan`, `fixture`, and `skill` CLI modes against the sample connector manifest. `npm run package:smoke` performs an `npm pack --dry-run` and verifies that the packed tarball contains the CLI source, library source, sample connector manifest, skill guide, README, license, and package metadata.
+`npm run smoke` exercises the documented `plan`, `fixture`, and `skill` CLI modes against the sample connector manifest. `npm run package:smoke` creates a real tarball in a disposable directory, installs it into a clean prefix, verifies that its declared export and bin point to installed files, imports and calls the installed library, and exercises the installed CLI's help, `plan`, `fixture`, `skill`, and documented failure behavior. The disposable package and installation are removed after either success or failure.
 
 ## Safety Notes
 
