@@ -37,6 +37,9 @@ unready fixture actions exit `1`; see
 [CLI behavior](docs/CLI.md) for the accepted manifest shape, validation
 diagnostics, and release-script contract.
 
+Every manifest must contain at least one entry in its `actions` array. Empty
+action lists are validation errors and produce no plan, fixture, or skill output.
+
 Read actions may document that approval is not required. Write, send, and
 delete actions must instead start approval metadata with an affirmative,
 machine-checked human-approval form, such as `Require human approval` or

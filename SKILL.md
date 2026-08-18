@@ -6,7 +6,7 @@ Use this skill before enabling an agent to perform connector-backed actions such
 
 ## Inputs And Tools
 
-Provide a local JSON connector manifest with an `actions` array. Each action should include `name`, `description`, `scopes`, `sideEffect`, `approval`, and `sampleInput`.
+Provide a local JSON connector manifest with a non-empty `actions` array. Each action should include `name`, `description`, `scopes`, `sideEffect`, `approval`, and `sampleInput`. Manifests with no actions are rejected before any plan, fixture, or skill guide is rendered.
 
 ## Side-Effect Boundaries
 

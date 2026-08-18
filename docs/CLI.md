@@ -23,7 +23,8 @@ mistake a fallback or partial result for success.
 
 ## Manifest Shape
 
-The manifest must be a JSON object with an `actions` array. Every entry in
+The manifest must be a JSON object with a non-empty `actions` array. An empty
+array is rejected before plan, fixture, or skill output is rendered. Every entry in
 `actions` must be a non-null JSON object; `null`, scalar values, and arrays are
 rejected before planning. Invalid entries produce a stable diagnostic that
 identifies the array index and received type, for example:
