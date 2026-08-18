@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 
@@ -64,8 +64,9 @@ try {
 
   const importSmoke = run(process.execPath, ['--input-type=module', '-e', [
     "import('connector-action-stub-skill').then((mod) => {",
-    "  if (typeof mod.buildPlan !== 'function' || typeof mod.renderPlan !== 'function') process.exit(1);",
-    "  const plan = mod.buildPlan({ name: 'installed', actions: [] });",
+    "  if (typeof mod.parseManifest !== 'function' || typeof mod.buildPlan !== 'function' || typeof mod.renderPlan !== 'function') process.exit(1);",
+    "  try { mod.parseManifest('{\"actions\":[]}'); process.exit(1); } catch (error) { if (!/must not be empty/.test(error.message)) process.exit(1); }",
+    "  const plan = mod.buildPlan(mod.parseManifest('{\"name\":\"installed\",\"actions\":[{\"name\":\"read\"}]}'));",
     "  if (plan.connector !== 'installed' || !mod.renderPlan(plan).includes('Connector dry-run plan')) process.exit(1);",
     '});',
   ].join('\n')], { cwd: prefix });
@@ -73,6 +74,8 @@ try {
 
   const bin = join(prefix, 'node_modules', '.bin', 'connector-action-stub');
   const manifest = join(packageRoot, 'examples', 'crm-manifest.json');
+  const emptyManifest = join(workspace, 'empty-manifest.json');
+  writeFileSync(emptyManifest, JSON.stringify({ name: 'empty', actions: [] }));
   const commands = [
     { args: ['--help'], status: 0, stream: 'stdout', match: /Usage: connector-action-stub/u },
     { args: ['plan', manifest], status: 0, stream: 'stdout', match: /Connector dry-run plan/u },
@@ -81,6 +84,7 @@ try {
     { args: [], status: 2, stream: 'stderr', match: /Missing command/u },
     { args: ['plan', manifest, 'extra.json'], status: 2, stream: 'stderr', match: /Unexpected argument: extra\.json/u },
     { args: ['plan', join(workspace, 'missing.json')], status: 1, stream: 'stderr', match: /Failed to read manifest/u },
+    { args: ['plan', emptyManifest], status: 1, stream: 'stderr', match: /actions array must not be empty/u },
   ];
   for (const check of commands) {
     const result = run(bin, check.args);
