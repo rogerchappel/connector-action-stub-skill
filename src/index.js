@@ -4,6 +4,7 @@ export function parseManifest(text) {
     throw new Error('manifest must be a non-null object');
   }
   if (!Array.isArray(manifest.actions)) throw new Error('manifest must include an actions array');
+  if (manifest.actions.length === 0) throw new Error('manifest actions array must not be empty');
   for (const [index, action] of manifest.actions.entries()) {
     if (action === null || typeof action !== 'object' || Array.isArray(action)) {
       const received = action === null ? 'null' : Array.isArray(action) ? 'array' : typeof action;
