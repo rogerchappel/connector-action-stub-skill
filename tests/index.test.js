@@ -12,6 +12,12 @@ test('rejects manifest action entries that are not objects', () => {
     );
   }
 });
+test('rejects manifests with no actions before generating output', () => {
+  assert.throws(
+    () => parseManifest(JSON.stringify({ name: 'empty-connector', actions: [] })),
+    new Error('manifest actions array must not be empty')
+  );
+});
 test('keeps manifest-controlled text inside Markdown table cells', () => {
   const output = renderPlan({
     connector: 'demo|connector\nsecond line',
@@ -254,6 +260,18 @@ test('cli reports invalid action entries as manifest validation errors', (contex
     assert.equal(result.stdout, '');
     assert.match(result.stderr, new RegExp(`Failed to read manifest.*actions\\[0\\].*received ${label}`, 'u'));
     assert.doesNotMatch(result.stderr, /TypeError|Cannot read properties|\\s+at\\s/u);
+  }
+});
+test('cli rejects empty actions without rendering any mode', (context) => {
+  const path = `/tmp/connector-action-stub-${process.pid}-empty-actions.json`;
+  fs.writeFileSync(path, JSON.stringify({ name: 'empty-connector', actions: [] }));
+  context.after(() => fs.rmSync(path, { force: true }));
+
+  for (const mode of ['plan', 'fixture', 'skill']) {
+    const result = spawnSync(process.execPath, ['src/cli.js', mode, path], { encoding: 'utf8' });
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.match(result.stderr, /Failed to read manifest.*actions array must not be empty/u);
   }
 });
 test('cli never presents malformed action fields as ready', (context) => {
