@@ -49,8 +49,8 @@ test('keeps manifest-controlled text inside skill guide fields', () => {
   assert.equal(output.split('\n').filter((line) => line.startsWith('# ')).length, 1);
   assert.equal(output.split('\n').filter((line) => line.startsWith('## ')).length, 3);
   assert.equal(output.split('\n').filter((line) => line.startsWith('- ')).length, 1);
-  assert.match(output, /^# crm ## Injected \\| \\\\ \\*\\*connector\\*\\* connector action skill$/mu);
-  assert.match(output, /^- send - injected \\[instruction\\]\\\(https:\/\/example\\\.com\\\) \\| \\#tag: high risk, ready$/mu);
+  assert.match(output, /^# crm \\#\\# Injected \\| \\\\ \\*\\*connector\\*\\* connector action skill$/mu);
+  assert.match(output, /^- send \\- injected \\[instruction\\]\\\(https:\/\/example\\\.com\\\) \\| \\#tag: high risk, ready$/mu);
 });
 test('flags missing approval fields', () => { const plan = buildPlan({ actions: [{ name: 'send' }] }); assert.ok(plan.actions[0].missing.includes('approval (non-empty string)')); });
 test('marks malformed action fields unready', () => {
@@ -247,8 +247,8 @@ test('cli skill mode contains Markdown punctuation and line breaks from manifest
   assert.equal(result.status, 0);
   assert.equal(result.stdout.split('\n').filter((line) => line.startsWith('## ')).length, 3);
   assert.equal(result.stdout.split('\n').filter((line) => line.startsWith('- ')).length, 1);
-  assert.match(result.stdout, /crm ## injected \\| \\*\\*bold\\*\\*/u);
-  assert.match(result.stdout, /- send - injected: high risk, ready/u);
+  assert.match(result.stdout, /crm \\#\\# injected \\| \\*\\*bold\\*\\*/u);
+  assert.match(result.stdout, /- send \\- injected: high risk, ready/u);
 });
 test('cli reports malformed and unready manifests without rendering output', () => {
   const malformed = spawnSync(process.execPath, ['src/cli.js', 'plan', 'tests/fixtures/malformed.json'], { encoding: 'utf8' });

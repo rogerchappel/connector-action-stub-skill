@@ -19,6 +19,10 @@ const escapeMarkdownText = (value) => String(value)
   .replaceAll('\\', '\\\\')
   .replaceAll('|', '\\|')
   .replace(/\r\n?|\n/gu, '<br>');
+const escapeMarkdownInline = (value) => String(value)
+  .replace(/\s+/gu, ' ')
+  .trim()
+  .replace(/[\\|*_{}[\]()#+\-.!>]/gu, '\\$&');
 const isNonEmptyString = (value) => typeof value === 'string' && value.trim().length > 0;
 const isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 const normalizeApproval = (value) => typeof value === 'string'
@@ -70,5 +74,10 @@ export function buildFixture(manifest) {
 }
 export function renderSkillGuide(manifest) {
   const plan = buildPlan(manifest);
-  return `# ${plan.connector} connector action skill\n\n## When To Use\n\nUse for dry-run planning of ${plan.connector} connector actions.\n\n## Approval Requirements\n\nLive execution requires explicit approval after reviewing generated plans and fixtures.\n\n## Actions\n\n${plan.actions.map((action) => `- ${action.name}: ${action.risk} risk, ${action.ready ? 'ready' : 'missing ' + action.missing.join(', ')}`).join('\n')}\n`;
+  const connector = escapeMarkdownInline(plan.connector);
+  const actions = plan.actions.map((action) => {
+    const readiness = action.ready ? 'ready' : `missing ${action.missing.join(', ')}`;
+    return `- ${escapeMarkdownInline(action.name)}: ${action.risk} risk, ${readiness}`;
+  }).join('\n');
+  return `# ${connector} connector action skill\n\n## When To Use\n\nUse for dry-run planning of ${connector} connector actions.\n\n## Approval Requirements\n\nLive execution requires explicit approval after reviewing generated plans and fixtures.\n\n## Actions\n\n${actions}\n`;
 }
