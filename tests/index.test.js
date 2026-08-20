@@ -33,6 +33,25 @@ test('keeps manifest-controlled text inside Markdown table cells', () => {
   assert.match(output, /\| read\\\|records<br>next \| low\\\|risk \| missing approval\\\|owner, sample<br>input \|/u);
   assert.equal(output.split('\n').filter((line) => line.startsWith('| read')).length, 1);
 });
+test('keeps manifest-controlled text inside skill guide fields', () => {
+  const manifest = {
+    name: 'crm\n\n## Injected | \\ **connector**',
+    actions: [{
+      name: 'send\r\n- injected [instruction](https://example.com) | #tag',
+      description: 'Send a message', sideEffect: 'send',
+      approval: 'Require human approval', scopes: ['messages.send'],
+      sampleInput: {}, idempotencyKey: 'request-id'
+    }]
+  };
+
+  const output = renderSkillGuide(manifest);
+
+  assert.equal(output.split('\n').filter((line) => line.startsWith('# ')).length, 1);
+  assert.equal(output.split('\n').filter((line) => line.startsWith('## ')).length, 3);
+  assert.equal(output.split('\n').filter((line) => line.startsWith('- ')).length, 1);
+  assert.match(output, /^# crm ## Injected \\| \\\\ \\*\\*connector\\*\\* connector action skill$/mu);
+  assert.match(output, /^- send - injected \\[instruction\\]\\\(https:\/\/example\\\.com\\\) \\| \\#tag: high risk, ready$/mu);
+});
 test('flags missing approval fields', () => { const plan = buildPlan({ actions: [{ name: 'send' }] }); assert.ok(plan.actions[0].missing.includes('approval (non-empty string)')); });
 test('marks malformed action fields unready', () => {
   const malformed = {
@@ -211,6 +230,25 @@ test('cli renders every documented mode from the sample manifest', () => {
   const guide = spawnSync(process.execPath, ['src/cli.js', 'skill', 'examples/crm-manifest.json'], { encoding: 'utf8' });
   assert.equal(guide.status, 0);
   assert.match(guide.stdout, /Approval Requirements/u);
+});
+test('cli skill mode contains Markdown punctuation and line breaks from manifests', (context) => {
+  const path = `/tmp/connector-action-stub-${process.pid}-skill-markdown.json`;
+  fs.writeFileSync(path, JSON.stringify({
+    name: 'crm\n## injected | **bold**',
+    actions: [{
+      name: 'send\n- injected', description: 'Send', sideEffect: 'send',
+      approval: 'Require human approval', scopes: ['messages.send'],
+      sampleInput: {}, idempotencyKey: 'request-id'
+    }]
+  }));
+  context.after(() => fs.rmSync(path, { force: true }));
+
+  const result = spawnSync(process.execPath, ['src/cli.js', 'skill', path], { encoding: 'utf8' });
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout.split('\n').filter((line) => line.startsWith('## ')).length, 3);
+  assert.equal(result.stdout.split('\n').filter((line) => line.startsWith('- ')).length, 1);
+  assert.match(result.stdout, /crm ## injected \\| \\*\\*bold\\*\\*/u);
+  assert.match(result.stdout, /- send - injected: high risk, ready/u);
 });
 test('cli reports malformed and unready manifests without rendering output', () => {
   const malformed = spawnSync(process.execPath, ['src/cli.js', 'plan', 'tests/fixtures/malformed.json'], { encoding: 'utf8' });
