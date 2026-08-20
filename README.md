@@ -40,6 +40,11 @@ diagnostics, and release-script contract.
 Every manifest must contain at least one entry in its `actions` array. Empty
 action lists are validation errors and produce no plan, fixture, or skill output.
 
+The `skill` mode normalizes line breaks and whitespace in connector and action
+names and escapes Markdown punctuation. Manifest text stays inside the
+generated heading, sentence, or action list item instead of creating new
+Markdown structure; see [CLI behavior](docs/CLI.md#manifest-shape).
+
 Read actions may document that approval is not required. Write, send, and
 delete actions must instead start approval metadata with an affirmative,
 machine-checked human-approval form, such as `Require human approval` or

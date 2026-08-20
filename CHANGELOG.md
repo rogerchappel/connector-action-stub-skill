@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Contain connector and action names inside generated skill-guide Markdown by
+  normalizing line breaks and escaping Markdown punctuation.
 - Require affirmative human-approval metadata for high-risk actions, failing
   closed for denial, absence, boolean-like, and ambiguous wording across
   library and CLI fixture generation.
