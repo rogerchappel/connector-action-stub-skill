@@ -54,6 +54,12 @@ share a name while producing identical output for repeated runs.
 Generated plan tables escape Markdown cell delimiters and convert embedded line
 breaks to `<br>`, so connector and action text cannot add rows or columns.
 
+Generated skill guides keep connector and action names in their intended
+heading, sentence, and list-item fields. Runs of whitespace, including line
+breaks, are normalized to one space, and backslashes, pipes, and Markdown
+punctuation are backslash-escaped. Manifest values therefore remain readable
+as literal text without creating headings, emphasis, links, or list items.
+
 ## Manifest Side Effects
 
 Each action's `sideEffect` must be one of `read`, `write`, `send`, or `delete`.

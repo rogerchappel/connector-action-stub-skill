@@ -76,11 +76,21 @@ try {
   const manifest = join(packageRoot, 'examples', 'crm-manifest.json');
   const emptyManifest = join(workspace, 'empty-manifest.json');
   writeFileSync(emptyManifest, JSON.stringify({ name: 'empty', actions: [] }));
+  const markdownManifest = join(workspace, 'markdown-manifest.json');
+  writeFileSync(markdownManifest, JSON.stringify({
+    name: 'crm\n## injected | **bold**',
+    actions: [{
+      name: 'send\n- injected', description: 'Send a message', sideEffect: 'send',
+      approval: 'Require human approval', scopes: ['messages.send'],
+      sampleInput: {}, idempotencyKey: 'request-id'
+    }]
+  }));
   const commands = [
     { args: ['--help'], status: 0, stream: 'stdout', match: /Usage: connector-action-stub/u },
     { args: ['plan', manifest], status: 0, stream: 'stdout', match: /Connector dry-run plan/u },
     { args: ['fixture', manifest], status: 0, stream: 'stdout', match: /"generatedAt": "stable-fixture"/u },
     { args: ['skill', manifest], status: 0, stream: 'stdout', match: /Approval Requirements/u },
+    { args: ['skill', markdownManifest], status: 0, stream: 'stdout', match: /crm \\#\\# injected \\| \\*\\*bold\\*\\*/u },
     { args: [], status: 2, stream: 'stderr', match: /Missing command/u },
     { args: ['plan', manifest, 'extra.json'], status: 2, stream: 'stderr', match: /Unexpected argument: extra\.json/u },
     { args: ['plan', join(workspace, 'missing.json')], status: 1, stream: 'stderr', match: /Failed to read manifest/u },
@@ -93,6 +103,13 @@ try {
       process.stderr.write(result.stderr);
       throw new Error(`installed CLI check failed for: ${check.args.join(' ') || '<no arguments>'}`);
     }
+  }
+
+  const containedSkill = run(bin, ['skill', markdownManifest]);
+  const headings = containedSkill.stdout.split('\n').filter((line) => line.startsWith('## '));
+  const listItems = containedSkill.stdout.split('\n').filter((line) => line.startsWith('- '));
+  if (headings.length !== 3 || listItems.length !== 1) {
+    throw new Error('installed skill mode allowed manifest text to add Markdown structure');
   }
 
   console.log(`Package smoke ok: installed and exercised ${packument.filename}`);
