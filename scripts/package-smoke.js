@@ -65,7 +65,7 @@ try {
   const importSmoke = run(process.execPath, ['--input-type=module', '-e', [
     "import('connector-action-stub-skill').then((mod) => {",
     "  if (typeof mod.parseManifest !== 'function' || typeof mod.buildPlan !== 'function' || typeof mod.renderPlan !== 'function') process.exit(1);",
-    "  try { mod.parseManifest('{\"actions\":[]}'); process.exit(1); } catch (error) { if (!/must not be empty/.test(error.message)) process.exit(1); }",
+    "  try { mod.parseManifest('{\"name\":\"empty\",\"actions\":[]}'); process.exit(1); } catch (error) { if (!/must not be empty/.test(error.message)) process.exit(1); }",
     "  const plan = mod.buildPlan(mod.parseManifest('{\"name\":\"installed\",\"actions\":[{\"name\":\"read\"}]}'));",
     "  if (plan.connector !== 'installed' || !mod.renderPlan(plan).includes('Connector dry-run plan')) process.exit(1);",
     '});',
@@ -76,9 +76,19 @@ try {
   const manifest = join(packageRoot, 'examples', 'crm-manifest.json');
   const emptyManifest = join(workspace, 'empty-manifest.json');
   writeFileSync(emptyManifest, JSON.stringify({ name: 'empty', actions: [] }));
+  const invalidNameManifest = join(workspace, 'invalid-name-manifest.json');
+  writeFileSync(invalidNameManifest, JSON.stringify({ actions: [{ name: 'read' }] }));
+  const normalizedIdManifest = join(workspace, 'normalized-id-manifest.json');
+  writeFileSync(normalizedIdManifest, JSON.stringify({
+    name: 'installed',
+    actions: [
+      { name: 'List / Records!', description: 'Read', sideEffect: 'read', approval: 'not required', scopes: ['records.read'], sampleInput: {} },
+      { name: 'list---records', description: 'Read', sideEffect: 'read', approval: 'not required', scopes: ['records.read'], sampleInput: {} }
+    ]
+  }));
   const markdownManifest = join(workspace, 'markdown-manifest.json');
   writeFileSync(markdownManifest, JSON.stringify({
-    name: 'crm\n## injected | **bold**',
+    name: 'crm ## injected | **bold**',
     actions: [{
       name: 'send\n- injected', description: 'Send a message', sideEffect: 'send',
       approval: 'Require human approval', scopes: ['messages.send'],
@@ -89,12 +99,14 @@ try {
     { args: ['--help'], status: 0, stream: 'stdout', match: /Usage: connector-action-stub/u },
     { args: ['plan', manifest], status: 0, stream: 'stdout', match: /Connector dry-run plan/u },
     { args: ['fixture', manifest], status: 0, stream: 'stdout', match: /"generatedAt": "stable-fixture"/u },
+    { args: ['fixture', normalizedIdManifest], status: 0, stream: 'stdout', match: /"id": "dryrun-list-records-2"/u },
     { args: ['skill', manifest], status: 0, stream: 'stdout', match: /Approval Requirements/u },
     { args: ['skill', markdownManifest], status: 0, stream: 'stdout', match: /crm \\#\\# injected \\| \\*\\*bold\\*\\*/u },
     { args: [], status: 2, stream: 'stderr', match: /Missing command/u },
     { args: ['plan', manifest, 'extra.json'], status: 2, stream: 'stderr', match: /Unexpected argument: extra\.json/u },
     { args: ['plan', join(workspace, 'missing.json')], status: 1, stream: 'stderr', match: /Failed to read manifest/u },
     { args: ['plan', emptyManifest], status: 1, stream: 'stderr', match: /actions array must not be empty/u },
+    { args: ['plan', invalidNameManifest], status: 1, stream: 'stderr', match: /manifest name must be a non-empty string/u },
   ];
   for (const check of commands) {
     const result = run(bin, check.args);
