@@ -18,6 +18,15 @@ test('rejects manifests with no actions before generating output', () => {
     new Error('manifest actions array must not be empty')
   );
 });
+test('requires a trimmed, single-line connector name', () => {
+  for (const [value, message] of [
+    [undefined, 'non-empty string'], [null, 'non-empty string'], [{}, 'non-empty string'],
+    ['', 'non-empty string'], ['   ', 'non-empty string'], ['crm\nadmin', 'single-line string']
+  ]) {
+    assert.throws(() => parseManifest(JSON.stringify({ name: value, actions: [{}] })), new RegExp(message, 'u'));
+  }
+  assert.equal(parseManifest(JSON.stringify({ name: '  crm connector  ', actions: [{}] })).name, 'crm connector');
+});
 test('keeps manifest-controlled text inside Markdown table cells', () => {
   const output = renderPlan({
     connector: 'demo|connector\nsecond line',
@@ -180,6 +189,26 @@ test('generates stable, distinct response IDs for every action', () => {
   const single = buildFixture({ name: 'single-action', actions: [action] });
   assert.equal(single.responses[0].response.id, 'dryrun-same-1');
 });
+test('normalizes response IDs while preserving positional uniqueness', () => {
+  const base = {
+    description: 'Read records', sideEffect: 'read', approval: 'not required',
+    scopes: ['records.read'], sampleInput: {}
+  };
+  const manifest = parseManifest(JSON.stringify({
+    name: 'crm',
+    actions: [
+      { ...base, name: ' List / Records! ' },
+      { ...base, name: 'list---records' },
+      { ...base, name: 'Résumé\nLookup' },
+      { ...base, name: '!!!' }
+    ]
+  }));
+  const fixture = buildFixture(manifest);
+  assert.deepEqual(fixture.responses.map(({ response }) => response.id), [
+    'dryrun-list-records-1', 'dryrun-list-records-2', 'dryrun-resume-lookup-3', 'dryrun-action-4'
+  ]);
+  assert.ok(fixture.responses.every(({ response }) => /^[a-z0-9-]+$/u.test(response.id)));
+});
 test('fixture generation rejects actions that are not ready', () => {
   const manifest = {
     actions: [{
@@ -234,7 +263,7 @@ test('cli renders every documented mode from the sample manifest', () => {
 test('cli skill mode contains Markdown punctuation and line breaks from manifests', (context) => {
   const path = `/tmp/connector-action-stub-${process.pid}-skill-markdown.json`;
   fs.writeFileSync(path, JSON.stringify({
-    name: 'crm\n## injected | **bold**',
+    name: 'crm ## injected | **bold**',
     actions: [{
       name: 'send\n- injected', description: 'Send', sideEffect: 'send',
       approval: 'Require human approval', scopes: ['messages.send'],
@@ -260,6 +289,19 @@ test('cli reports malformed and unready manifests without rendering output', () 
   assert.equal(unready.status, 1);
   assert.equal(unready.stdout, '');
   assert.match(unready.stderr, /Cannot generate fixture.*archive.*sideEffect/u);
+});
+test('cli rejects invalid connector names before every mode emits output', (context) => {
+  for (const [label, name] of [['missing', undefined], ['wrong-type', { bad: true }], ['blank', '  '], ['multiline', 'crm\nadmin']]) {
+    const path = `/tmp/connector-action-stub-${process.pid}-connector-${label}.json`;
+    fs.writeFileSync(path, JSON.stringify({ name, actions: [{}] }));
+    context.after(() => fs.rmSync(path, { force: true }));
+    for (const mode of ['plan', 'fixture', 'skill']) {
+      const result = spawnSync(process.execPath, ['src/cli.js', mode, path], { encoding: 'utf8' });
+      assert.equal(result.status, 1);
+      assert.equal(result.stdout, '');
+      assert.match(result.stderr, /Failed to read manifest.*manifest name must be/u);
+    }
+  }
 });
 test('cli fails closed for high-risk actions without affirmative human approval', (context) => {
   for (const [label, approval] of [
