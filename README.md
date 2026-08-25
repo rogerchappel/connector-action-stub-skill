@@ -37,8 +37,13 @@ unready fixture actions exit `1`; see
 [CLI behavior](docs/CLI.md) for the accepted manifest shape, validation
 diagnostics, and release-script contract.
 
-Every manifest must contain at least one entry in its `actions` array. Empty
-action lists are validation errors and produce no plan, fixture, or skill output.
+Every manifest must have a non-empty, single-line string `name` and at least one
+entry in its `actions` array. Invalid connector names and empty action lists are
+validation errors and produce no plan, fixture, or skill output. Fixture
+response IDs normalize action names to lowercase ASCII letters, digits, and
+hyphens, then append the manifest position so normalized duplicates stay unique.
+The exact normalization contract is documented in
+[CLI behavior](docs/CLI.md#manifest-shape).
 
 The `skill` mode normalizes line breaks and whitespace in connector and action
 names and escapes Markdown punctuation. Manifest text stays inside the

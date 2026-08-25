@@ -11,6 +11,13 @@ export function parseManifest(text) {
       throw new Error(`manifest actions[${index}] must be a non-null object (received ${received})`);
     }
   }
+  if (typeof manifest.name !== 'string' || manifest.name.trim().length === 0) {
+    throw new Error('manifest name must be a non-empty string');
+  }
+  if (/\r|\n/u.test(manifest.name)) {
+    throw new Error('manifest name must be a single-line string');
+  }
+  manifest.name = manifest.name.trim();
   return manifest;
 }
 const SUPPORTED_SIDE_EFFECTS = new Set(['read', 'write', 'send', 'delete']);
@@ -28,6 +35,12 @@ const isObject = (value) => value !== null && typeof value === 'object' && !Arra
 const normalizeApproval = (value) => typeof value === 'string'
   ? value.trim().toLowerCase().replace(/\s+/gu, ' ')
   : '';
+const normalizeResponseIdSegment = (value) => value
+  .normalize('NFKD')
+  .toLowerCase()
+  .replace(/[\u0300-\u036f]/gu, '')
+  .replace(/[^a-z0-9]+/gu, '-')
+  .replace(/^-+|-+$/gu, '') || 'action';
 
 export function inspectAction(action) {
   const missing = [];
@@ -54,7 +67,7 @@ export function inspectAction(action) {
   return { name: isNonEmptyString(action.name) ? action.name : '<unnamed>', sideEffect, risk, missing, ready: missing.length === 0 };
 }
 export function buildPlan(manifest) {
-  return { connector: manifest.name || 'connector', actionCount: manifest.actions.length, actions: manifest.actions.map(inspectAction), liveExecution: false };
+  return { connector: manifest.name, actionCount: manifest.actions.length, actions: manifest.actions.map(inspectAction), liveExecution: false };
 }
 export function renderPlan(plan) {
   const rows = plan.actions.map((action) => {
@@ -70,7 +83,7 @@ export function buildFixture(manifest) {
     const details = unready.map((action) => `${action.name}: ${action.missing.join(', ')}`).join('; ');
     throw new Error(`Cannot generate fixture for unready actions: ${details}`);
   }
-  return { connector: plan.connector, generatedAt: 'stable-fixture', responses: manifest.actions.map((action, index) => ({ action: plan.actions[index].name, ok: true, dryRun: true, request: action.sampleInput, response: { id: `dryrun-${plan.actions[index].name}-${index + 1}`, status: 'planned' } })) };
+  return { connector: plan.connector, generatedAt: 'stable-fixture', responses: manifest.actions.map((action, index) => ({ action: plan.actions[index].name, ok: true, dryRun: true, request: action.sampleInput, response: { id: `dryrun-${normalizeResponseIdSegment(plan.actions[index].name)}-${index + 1}`, status: 'planned' } })) };
 }
 export function renderSkillGuide(manifest) {
   const plan = buildPlan(manifest);

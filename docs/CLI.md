@@ -23,7 +23,10 @@ mistake a fallback or partial result for success.
 
 ## Manifest Shape
 
-The manifest must be a JSON object with a non-empty `actions` array. An empty
+The manifest must be a JSON object with a required `name` and a non-empty
+`actions` array. `name` must be a non-empty, single-line string. Surrounding
+whitespace is trimmed; missing, non-string, whitespace-only, or multiline names
+are rejected before plan, fixture, or skill output is rendered. An empty
 array is rejected before plan, fixture, or skill output is rendered. Every entry in
 `actions` must be a non-null JSON object; `null`, scalar values, and arrays are
 rejected before planning. Invalid entries produce a stable diagnostic that
@@ -46,10 +49,15 @@ Action fields use the following validation contract:
 Malformed fields leave an action unready in plan and skill output. Fixture
 generation fails closed when any action is unready.
 
-Every generated fixture response has a deterministic ID in the form
-`dryrun-<action-name>-<position>`, where positions start at `1` in manifest
-order. Including the position keeps IDs distinct when multiple ready actions
-share a name while producing identical output for repeated runs.
+Every generated fixture response has a deterministic, single-line,
+identifier-safe ID in the form `dryrun-<normalized-action-name>-<position>`,
+where positions start at `1` in manifest order. Action names are Unicode
+normalized, lowercased, stripped of combining marks, and every run of
+non-ASCII-alphanumeric characters becomes one hyphen. Leading and trailing
+hyphens are removed; a name with no remaining letters or digits uses `action`.
+Including the position keeps IDs distinct when different names normalize to
+the same segment while producing identical output for repeated runs. The
+original action name remains unchanged in the fixture's `action` field.
 
 Generated plan tables escape Markdown cell delimiters and convert embedded line
 breaks to `<br>`, so connector and action text cannot add rows or columns.
