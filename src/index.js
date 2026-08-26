@@ -25,11 +25,13 @@ const AFFIRMATIVE_HUMAN_APPROVAL = /^(?:requires? (?:explicit )?human approval|h
 const escapeMarkdownText = (value) => String(value)
   .replaceAll('\\', '\\\\')
   .replaceAll('|', '\\|')
+  .replaceAll('`', '\\`')
+  .replaceAll('~', '\\~')
   .replace(/\r\n?|\n/gu, '<br>');
 const escapeMarkdownInline = (value) => String(value)
   .replace(/\s+/gu, ' ')
   .trim()
-  .replace(/[\\|*_{}[\]()#+\-.!>]/gu, '\\$&');
+  .replace(/[\\|*_{}[\]()#+\-.!>`~]/gu, '\\$&');
 const isNonEmptyString = (value) => typeof value === 'string' && value.trim().length > 0;
 const isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 const normalizeApproval = (value) => typeof value === 'string'
