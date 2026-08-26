@@ -377,3 +377,63 @@ test('cli never presents malformed action fields as ready', (context) => {
   assert.equal(fixture.stdout, '');
   assert.match(fixture.stderr, /Cannot generate fixture.*name \(non-empty string\)/u);
 });
+test('backtick and tilde are escaped in plan table cells', () => {
+  const output = renderPlan({
+    connector: '`wiki` ~~strike~~ demo',
+    liveExecution: false,
+    actions: [{
+      name: 'read `data`',
+      risk: 'low',
+      ready: true
+    }]
+  });
+  assert.ok(/\\`.*/u.test(output), 'plan should contain escaped backticks');
+  assert.ok(/\\\~/.test(output), 'plan should contain escaped tildes');
+  // Verify no raw code-span markers survive
+  assert.doesNotMatch(output, /(?<!\\)`[^`]+`/gu);
+});
+test('backtick and tilde are escaped in skill guide fields', () => {
+  const manifest = {
+    name: 'wiki \x60injected\x60 ~~strike~~ example',
+    actions: [{
+      name: 'render plan | with \x60code\x60 ~~style~~',
+      description: 'A description with \x60backticks\x60.',
+      sideEffect: 'read',
+      approval: 'Not required for reads',
+      scopes: ['wiki.read'],
+      sampleInput: {}
+    }]
+  };
+
+  const output = renderSkillGuide(manifest);
+
+  assert.ok(/\\`.*/u.test(output), 'skill guide should contain escaped backticks');
+  assert.ok(/\\\~/.test(output), 'skill guide should contain escaped tildes');
+  assert.equal(output.split('\n').filter((line) => line.startsWith('# ')).length, 1);
+  assert.equal(output.split('\n').filter((line) => line.startsWith('## ')).length, 3);
+  assert.equal(output.split('\n').filter((line) => line.startsWith('- ')).length, 1);
+  assert.doesNotMatch(output, /(?<!\\)`[^`]+`/gu);
+});
+test('cli skill mode escapes backtick and tilde in manifest output', (context) => {
+  const path = `/tmp/connector-action-stub-${process.pid}-skill-bt.json`;
+  fs.writeFileSync(path, JSON.stringify({
+    name: 'wiki \x60injected\x60 ~~strike~~ example',
+    actions: [{
+      name: 'render plan | with \x60code\x60 ~~style~~',
+      description: 'A description with \x60backticks\x60.',
+      sideEffect: 'read',
+      approval: 'Not required for reads',
+      scopes: ['wiki.read'],
+      sampleInput: {}
+    }]
+  }));
+  context.after(() => fs.rmSync(path, { force: true }));
+
+  const result = spawnSync(process.execPath, ['src/cli.js', 'skill', path], { encoding: 'utf8' });
+  assert.equal(result.status, 0);
+  assert.ok(/\`/.test(result.stdout) === false || /\\\`/.test(result.stdout), 'output must not contain unescaped raw backtick code spans');
+  assert.ok(/\\\\\~/.test(result.stdout) || /\\\~/.test(result.stdout), 'output must contain escaped tildes');
+  assert.equal(result.stdout.split('\n').filter((line) => line.startsWith('# ')).length, 1);
+  assert.equal(result.stdout.split('\n').filter((line) => line.startsWith('## ')).length, 3);
+  assert.equal(result.stdout.split('\n').filter((line) => line.startsWith('- ')).length, 1);
+});
