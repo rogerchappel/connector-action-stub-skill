@@ -6,11 +6,10 @@ ship
 
 ## Verification
 
-- npm test
-- npm run check
-- npm run build
-- npm run smoke
-- bash scripts/validate.sh
+- npm run release:check
+
+`bash scripts/validate.sh` is retained only as a compatibility entry point and
+delegates to the same canonical command.
 
 ## Safety
 
