@@ -4,5 +4,8 @@ Run the included fixture through the CLI before using the package on your own ma
 
 ```bash
 npm run smoke
-bash scripts/validate.sh
+npm run release:check
 ```
+
+The release gate includes the sample smoke above plus syntax, regression,
+consecutive-build, and installed-package checks.

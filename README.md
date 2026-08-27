@@ -13,15 +13,10 @@ npm run release:check
 
 ## Verification
 
-Run the same checks used for release-readiness before publishing or opening a release PR:
+Run the canonical release-readiness gate before publishing or opening a release PR:
 
 ```bash
-npm run check
-npm test
-npm run build
-npm run smoke
 npm run release:check
-npm pack --dry-run
 ```
 
 ## CLI
@@ -75,11 +70,6 @@ The package smoke check verifies this export alongside the CLI files.
 Run the full local gate before publishing, tagging, or handing the package to another agent:
 
 ```bash
-npm run check
-npm test
-npm run build
-npm run smoke
-npm run package:smoke
 npm run release:check
 ```
 
