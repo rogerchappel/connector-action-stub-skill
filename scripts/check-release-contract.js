@@ -11,6 +11,23 @@ assert.equal(
 const compatibilityGate = readFileSync(new URL("./validate.sh", import.meta.url), "utf8");
 assert.match(compatibilityGate, /^npm run release:check$/m, "validate.sh must delegate to release:check");
 
+const workflow = readFileSync(new URL("../.github/workflows/ci.yml", import.meta.url), "utf8");
+assert.match(workflow, /^permissions:\n  contents: read$/m, "CI must declare least-privilege read access");
+assert.match(workflow, /node-version: \[20, 24\]/, "CI must test the minimum and current Node lines");
+assert.match(
+  workflow,
+  /actions\/checkout@[0-9a-f]{40} # v\d+/,
+  "checkout must be pinned to an immutable commit with a readable version",
+);
+assert.match(
+  workflow,
+  /actions\/setup-node@[0-9a-f]{40} # v\d+/,
+  "setup-node must be pinned to an immutable commit with a readable version",
+);
+assert.match(workflow, /node-version: \$\{\{ matrix\.node-version \}\}/, "setup-node must use the compatibility matrix");
+assert.match(workflow, /^      - run: npm ci$/m, "CI must install from the lockfile with npm ci");
+assert.match(workflow, /^      - run: npm run release:check$/m, "every matrix entry must run the canonical release gate");
+
 for (const path of ["README.md", "SKILL.md", "docs/ORCHESTRATION.md", "docs/RELEASE_CANDIDATE.md", "docs/examples.md"]) {
   const content = readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
   assert.match(content, /npm run release:check/, `${path} must name the canonical release gate`);
