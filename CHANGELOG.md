@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Make CI installs reproducible from the committed lockfile, test the full
+  release gate on Node 20 and 24, and contract-test least-privilege permissions
+  plus immutable GitHub Action revisions.
 - Contain connector and action names inside generated skill-guide Markdown by
   normalizing line breaks and escaping Markdown punctuation.
 - Require affirmative human-approval metadata for high-risk actions, failing
