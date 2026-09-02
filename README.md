@@ -73,7 +73,7 @@ Run the full local gate before publishing, tagging, or handing the package to an
 npm run release:check
 ```
 
-`npm run smoke` exercises the documented `plan`, `fixture`, and `skill` CLI modes against the sample connector manifest. `npm run package:smoke` creates a real tarball in a disposable directory, installs it into a clean prefix, verifies that its declared export and bin point to installed files, imports and calls the installed library, and exercises the installed CLI's help, `plan`, `fixture`, `skill`, and documented failure behavior. The disposable package and installation are removed after either success or failure.
+`npm run smoke` exercises the documented `plan`, `fixture`, and `skill` CLI modes against the sample connector manifest. `npm run package:smoke` is self-contained: after `npm ci` it builds twice to verify deterministic output, creates a real tarball in a disposable directory, installs it into a clean prefix, verifies that its declared export and bin point to installed files, imports and calls the installed library, and exercises the installed CLI's help, `plan`, `fixture`, `skill`, and documented failure behavior. The disposable package and installation are removed after either success or failure.
 
 CI installs the committed lockfile with `npm ci` and runs that complete gate on
 both Node 20, the minimum supported release, and Node 24. The release-contract
