@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Make the standalone package smoke command build and validate its own
+  deterministic artifact instead of relying on release-check ordering.
 - Make CI installs reproducible from the committed lockfile, test the full
   release gate on Node 20 and 24, and contract-test least-privilege permissions
   plus immutable GitHub Action revisions.
