@@ -3,8 +3,13 @@ import { readFileSync } from "node:fs";
 
 const packageJson = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 assert.equal(
+  packageJson.scripts["package:smoke"],
+  "npm run build:smoke && node scripts/package-smoke.js",
+  "package:smoke must build and validate the package from a clean checkout",
+);
+assert.equal(
   packageJson.scripts["release:check"],
-  "npm run release:contract && npm run check && npm test && npm run build:smoke && npm run smoke && npm run package:smoke",
+  "npm run release:contract && npm run check && npm test && npm run smoke && npm run package:smoke",
   "release:check must retain every release verification stage",
 );
 
