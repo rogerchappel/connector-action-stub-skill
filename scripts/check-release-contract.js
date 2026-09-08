@@ -21,13 +21,13 @@ assert.match(workflow, /^permissions:\n  contents: read$/m, "CI must declare lea
 assert.match(workflow, /node-version: \[20, 24\]/, "CI must test the minimum and current Node lines");
 assert.match(
   workflow,
-  /actions\/checkout@[0-9a-f]{40} # v\d+/,
-  "checkout must be pinned to an immutable commit with a readable version",
+  /actions\/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7\.0\.1/,
+  "checkout must use the reviewed v7.0.1 commit",
 );
 assert.match(
   workflow,
-  /actions\/setup-node@[0-9a-f]{40} # v\d+/,
-  "setup-node must be pinned to an immutable commit with a readable version",
+  /actions\/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7\.0\.0/,
+  "setup-node must use the reviewed v7.0.0 commit",
 );
 assert.match(workflow, /node-version: \$\{\{ matrix\.node-version \}\}/, "setup-node must use the compatibility matrix");
 assert.match(workflow, /^      - run: npm ci$/m, "CI must install from the lockfile with npm ci");
