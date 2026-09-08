@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Upgrade checkout and setup-node to reviewed immutable v7 revisions, enforce
+  those exact pins in the release contract, and document their runner baseline.
 - Make the standalone package smoke command build and validate its own
   deterministic artifact instead of relying on release-check ordering.
 - Make CI installs reproducible from the committed lockfile, test the full

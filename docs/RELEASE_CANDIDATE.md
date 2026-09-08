@@ -14,7 +14,8 @@ delegates to the same canonical command.
 
 CI repeats the full gate after a lockfile-backed install on Node 20 and Node 24.
 Its workflow contract enforces read-only repository permissions and immutable
-action revisions.
+action revisions. The pinned v7 actions require Actions Runner 2.327.1 or newer
+when the workflow runs on a self-hosted runner.
 
 ## Safety
 

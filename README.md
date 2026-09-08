@@ -79,6 +79,8 @@ CI installs the committed lockfile with `npm ci` and runs that complete gate on
 both Node 20, the minimum supported release, and Node 24. The release-contract
 check also guards the workflow's runtime matrix, least-privilege permissions,
 immutable action pins, deterministic install, and canonical gate invocation.
+The pinned checkout and setup-node v7 actions use the Node 24 action runtime;
+self-hosted runners therefore require Actions Runner 2.327.1 or newer.
 
 ## Safety Notes
 
