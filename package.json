@@ -14,7 +14,7 @@
     "check": "node --check src/index.js && node --check src/cli.js && node --check scripts/*.js && node --check tests/*.test.js",
     "build": "rm -rf dist && mkdir -p dist && cp -R src dist/src",
     "build:smoke": "node scripts/build-smoke.js",
-    "smoke": "node src/cli.js --help && node src/cli.js --version && node src/cli.js plan examples/crm-manifest.json > /tmp/connector-action-stub-skill-plan.md && node src/cli.js fixture examples/crm-manifest.json > /tmp/connector-action-stub-skill-fixture.json && node src/cli.js skill examples/crm-manifest.json > /tmp/connector-action-stub-skill-guide.md && grep -q \"Connector dry-run plan\" /tmp/connector-action-stub-skill-plan.md && grep -q \"stable-fixture\" /tmp/connector-action-stub-skill-fixture.json && grep -q \"Approval Requirements\" /tmp/connector-action-stub-skill-guide.md",
+    "smoke": "node scripts/smoke.js",
     "package:smoke": "npm run build:smoke && node scripts/package-smoke.js",
     "release:contract": "node scripts/check-release-contract.js",
     "release:check": "npm run release:contract && npm run check && npm test && npm run smoke && npm run package:smoke"
