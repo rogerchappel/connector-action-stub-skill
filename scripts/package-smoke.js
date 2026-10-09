@@ -32,6 +32,7 @@ try {
     'dist/src/cli.js',
     'dist/src/index.js',
     'scripts/package-smoke.js',
+    'tests/index.test.js',
     'docs/CLI.md',
     'examples/crm-manifest.json',
     'SKILL.md',
@@ -51,6 +52,9 @@ try {
   const prefix = join(workspace, 'installed');
   const install = run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', '--prefix', prefix, tarball]);
   requireSuccess(install, 'installing packed artifact');
+
+  const installedTests = run(process.execPath, ['--test', 'tests/index.test.js'], { cwd: join(prefix, 'node_modules', packument.name) });
+  requireSuccess(installedTests, 'running installed package test suite');
 
   const packageRoot = join(prefix, 'node_modules', packument.name);
   const installedPackage = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'));
