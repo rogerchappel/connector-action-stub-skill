@@ -33,7 +33,7 @@ assert.match(workflow, /node-version: \$\{\{ matrix\.node-version \}\}/, "setup-
 assert.match(workflow, /^      - run: npm ci$/m, "CI must install from the lockfile with npm ci");
 assert.match(workflow, /^      - run: npm run release:check$/m, "every matrix entry must run the canonical release gate");
 
-for (const path of ["README.md", "SKILL.md", "docs/ORCHESTRATION.md", "docs/RELEASE_CANDIDATE.md", "docs/examples.md"]) {
+for (const path of ["README.md", "SKILL.md", "docs/ORCHESTRATION.md", "docs/RELEASE_CANDIDATE.md", "docs/examples.md", "docs/CLI.md"]) {
   const content = readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
   assert.match(content, /npm run release:check/, `${path} must name the canonical release gate`);
 }

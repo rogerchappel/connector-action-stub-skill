@@ -1,5 +1,8 @@
 # CLI Behavior
 
+Run `npm run release:check` before publishing changes to verify the documented
+CLI contract alongside the package's tests and release checks.
+
 `connector-action-stub` accepts one mode and one manifest path:
 
 ```bash
