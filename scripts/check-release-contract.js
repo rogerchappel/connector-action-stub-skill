@@ -18,7 +18,7 @@ assert.match(compatibilityGate, /^npm run release:check$/m, "validate.sh must de
 
 const workflow = readFileSync(new URL("../.github/workflows/ci.yml", import.meta.url), "utf8");
 assert.match(workflow, /^permissions:\n  contents: read$/m, "CI must declare least-privilege read access");
-assert.match(workflow, /node-version: \[20, 24\]/, "CI must test the minimum and current Node lines");
+assert.match(workflow, /node-version: \[22, 24\]/, "CI must test supported active LTS lines");
 assert.match(
   workflow,
   /actions\/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7\.0\.1/,
