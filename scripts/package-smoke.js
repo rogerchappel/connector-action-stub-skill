@@ -45,6 +45,13 @@ try {
   const missing = required.filter((file) => !files.has(file));
   if (missing.length > 0) throw new Error(`packed artifact is missing: ${missing.join(', ')}`);
 
+  const maintainerOnlyFiles = [...files].filter((file) =>
+    file === 'docs/RELEASE_CANDIDATE.md' || /^docs\/.*(?:PR_CHECKLIST|MAINTAINER|RELEASE_EVIDENCE)/i.test(file)
+  );
+  if (maintainerOnlyFiles.length > 0) {
+    throw new Error(`packed artifact contains maintainer-only release evidence: ${maintainerOnlyFiles.join(', ')}`);
+  }
+
   const nestedBuildFiles = [...files].filter((file) => file.startsWith('dist/src/src/'));
   if (nestedBuildFiles.length > 0) throw new Error(`packed artifact contains nested build output: ${nestedBuildFiles.join(', ')}`);
 
