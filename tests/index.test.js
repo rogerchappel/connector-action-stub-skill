@@ -21,7 +21,8 @@ test('rejects manifests with no actions before generating output', () => {
 test('requires a trimmed, single-line connector name', () => {
   for (const [value, message] of [
     [undefined, 'non-empty string'], [null, 'non-empty string'], [{}, 'non-empty string'],
-    ['', 'non-empty string'], ['   ', 'non-empty string'], ['crm\nadmin', 'single-line string']
+    ['', 'non-empty string'], ['   ', 'non-empty string'], ['crm\nadmin', 'single-line string'],
+    ['crm\u2028admin', 'single-line string'], ['crm\u2029admin', 'single-line string']
   ]) {
     assert.throws(() => parseManifest(JSON.stringify({ name: value, actions: [{}] })), new RegExp(message, 'u'));
   }
