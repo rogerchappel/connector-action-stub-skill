@@ -14,7 +14,7 @@ export function parseManifest(text) {
   if (typeof manifest.name !== 'string' || manifest.name.trim().length === 0) {
     throw new Error('manifest name must be a non-empty string');
   }
-  if (/\r|\n/u.test(manifest.name)) {
+  if (/\r|\n|\u2028|\u2029/u.test(manifest.name)) {
     throw new Error('manifest name must be a single-line string');
   }
   manifest.name = manifest.name.trim();
